@@ -264,37 +264,35 @@
   <div class="section-label">Market Indicators</div>
   <div class="grid-4">
 
-    <!-- GOLD (spot price) -->
+    <!-- GOLD (spot price only) -->
     <div class="ind-card" id="card-gold" style="--card-accent:var(--gold-color);">
       <div class="ind-name">Gold</div>
       <div class="ind-tick">GC=F · NYMEX SPOT</div>
       <div class="ind-val" id="gold-val" style="color:var(--gold-color);">—</div>
       <div class="ind-sub" id="gold-chg" style="color:var(--text-dim);">Loading…</div>
-      <div class="ind-row-3">
-        <div><div class="plbl">52-Wk Low</div> <div class="pval" style="color:var(--green);font-size:12px;" id="gold-lo">—</div></div>
-        <div><div class="plbl">Current</div>    <div class="pval" style="color:var(--gold-color);font-size:12px;" id="gold-c">—</div></div>
-        <div><div class="plbl">52-Wk High</div><div class="pval" style="color:var(--amber);font-size:12px;" id="gold-hi">—</div></div>
-      </div>
-      <div class="mini-bar-hdr"><span>52-WK RANGE</span><span>LOW → HIGH</span></div>
-      <div class="mini-bar-track">
-        <div class="mini-bar-fill" id="gold-bar" style="background:linear-gradient(90deg,var(--green),var(--gold-color));"></div>
-      </div>
     </div>
 
-    <!-- DOW JONES -->
+    <!-- DOW JONES (peak-to-trough drawdown) -->
     <div class="ind-card" id="card-dji" style="--card-accent:var(--blue);">
       <div class="ind-name">Dow Jones</div>
       <div class="ind-tick">^DJI · BLUE CHIP 30</div>
-      <div class="ind-val" id="dji-val" style="color:var(--blue);">—</div>
-      <div class="ind-sub" id="dji-chg" style="color:var(--text-dim);">Loading…</div>
-      <div class="ind-row-3">
-        <div><div class="plbl">52-Wk Low</div> <div class="pval" style="color:var(--green);font-size:12px;" id="dji-lo">—</div></div>
-        <div><div class="plbl">Current</div>    <div class="pval" style="color:var(--blue);font-size:12px;"  id="dji-c">—</div></div>
-        <div><div class="plbl">52-Wk High</div><div class="pval" style="color:var(--amber);font-size:12px;" id="dji-hi">—</div></div>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin:10px 0 12px;">
+        <div style="font-size:9px;color:var(--text-dim);letter-spacing:.12em;text-transform:uppercase;margin-top:4px;">from 52-wk peak</div>
+        <div class="decline" id="dji-d" style="font-size:28px;">—</div>
       </div>
-      <div class="mini-bar-hdr"><span>52-WK RANGE</span><span>LOW → HIGH</span></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;padding:10px;background:var(--bg3);border:1px solid var(--border);">
+        <div><div class="plbl">52-Wk Peak</div><div class="pval peak-v" style="font-size:12px;" id="dji-pk">—</div></div>
+        <div><div class="plbl">Current</div>  <div class="pval cur-v"  style="font-size:12px;" id="dji-c">—</div></div>
+        <div><div class="plbl">Pts Lost</div> <div class="pval loss-v" style="font-size:12px;" id="dji-l">—</div></div>
+      </div>
+      <div class="mini-bar-hdr"><span>DRAWDOWN DEPTH</span><span>0 ──── 30%</span></div>
       <div class="mini-bar-track">
-        <div class="mini-bar-fill" id="dji-bar" style="background:linear-gradient(90deg,var(--green),var(--blue));"></div>
+        <div class="mini-bar-fill" id="dji-bar"></div>
+        <div class="mini-ticks">
+          <div class="mini-tick" style="left:16.67%"></div><div class="mini-tick" style="left:33.33%"></div>
+          <div class="mini-tick" style="left:50%"></div><div class="mini-tick" style="left:66.67%"></div>
+          <div class="mini-tick" style="left:83.33%"></div>
+        </div>
       </div>
     </div>
 
@@ -528,31 +526,33 @@ function renderIndicatorBar(barId,cur,lo,hi,gradient){
 }
 
 function renderGold(){
-  const v=goldData.current, lo=goldData.low52, hi=goldData.peak;
+  const v=goldData.current;
   const chg=v-goldData.prevClose, chgPct=goldData.prevClose>0?(chg/goldData.prevClose*100):0;
   const sign=chg>=0?'+':'';
   document.getElementById('gold-val').textContent='$'+fmt(v);
   const el=document.getElementById('gold-chg');
-  el.textContent=`${sign}${fmt(chg)} (${sign}${chgPct.toFixed(2)}%) TODAY`;
+  el.textContent=`${sign}$${fmt(Math.abs(chg))} (${sign}${chgPct.toFixed(2)}%) TODAY`;
   el.style.color=chg>=0?'var(--green)':'var(--red)';
-  document.getElementById('gold-lo').textContent='$'+fmt(lo);
-  document.getElementById('gold-c').textContent='$'+fmt(v);
-  document.getElementById('gold-hi').textContent='$'+fmt(hi);
-  renderIndicatorBar('gold-bar',v,lo,hi,'linear-gradient(90deg,var(--green),var(--gold-color))');
 }
 
 function renderDji(){
-  const v=djiData.current, lo=djiData.low52, hi=djiData.peak;
-  const chg=v-djiData.prevClose, chgPct=djiData.prevClose>0?(chg/djiData.prevClose*100):0;
-  const sign=chg>=0?'+':'';
-  document.getElementById('dji-val').textContent=fmt(v);
-  const el=document.getElementById('dji-chg');
-  el.textContent=`${sign}${fmt(chg)} (${sign}${chgPct.toFixed(2)}%) TODAY`;
-  el.style.color=chg>=0?'var(--green)':'var(--red)';
-  document.getElementById('dji-lo').textContent=fmt(lo);
-  document.getElementById('dji-c').textContent=fmt(v);
-  document.getElementById('dji-hi').textContent=fmt(hi);
-  renderIndicatorBar('dji-bar',v,lo,hi,'linear-gradient(90deg,var(--green),var(--blue))');
+  const d=dd(djiData.current,djiData.peak);
+  const color=declineColor(d);
+  document.getElementById('dji-d').textContent=(d>0?'−':'')+d.toFixed(2)+'%';
+  document.getElementById('dji-d').style.color=color;
+  document.getElementById('card-dji').style.setProperty('--card-accent',color);
+  document.getElementById('dji-pk').textContent=fmt(djiData.peak);
+  document.getElementById('dji-c').textContent=fmt(djiData.current);
+  document.getElementById('dji-l').textContent='−'+fmt(Math.max(0,djiData.peak-djiData.current));
+  const bar=document.getElementById('dji-bar');
+  bar.style.width=Math.min(100,d/30*100)+'%';
+  if(d<=0)      bar.style.background='var(--green)';
+  else if(d<5)  bar.style.background='linear-gradient(90deg,var(--green),var(--c5))';
+  else if(d<10) bar.style.background='linear-gradient(90deg,var(--c5),var(--c10))';
+  else if(d<15) bar.style.background='linear-gradient(90deg,var(--c10),var(--c15))';
+  else if(d<20) bar.style.background='linear-gradient(90deg,var(--c15),var(--c20))';
+  else if(d<25) bar.style.background='linear-gradient(90deg,var(--c20),var(--c25))';
+  else          bar.style.background='linear-gradient(90deg,var(--c25),var(--c30))';
 }
 
 function renderVix(){
