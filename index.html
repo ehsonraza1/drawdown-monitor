@@ -649,6 +649,7 @@ function renderDxy(){
   document.querySelector('#dxy-grad stop:first-child').setAttribute('stop-color', lineColor);
 }
 
+function renderGold(){
   const v=goldData.current;
   const chg=v-goldData.prevClose, chgPct=goldData.prevClose>0?(chg/goldData.prevClose*100):0;
   const sign=chg>=0?'+':'';
