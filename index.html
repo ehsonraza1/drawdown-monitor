@@ -402,6 +402,9 @@ const TC={5:'var(--c5)',10:'var(--c10)',15:'var(--c15)',20:'var(--c20)',25:'var(
 const PROXIES=[
   u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
   u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
+  u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
+  u=>`https://thingproxy.freeboard.io/fetch/${u}`,
+  u=>`https://cors-anywhere.herokuapp.com/${u}`,
 ];
 
 /* ═══ STATE ════════════════════════════════════ */
@@ -435,10 +438,10 @@ async function fetchWithTimeout(url,ms=9000){
 }
 async function fetchYahoo(sym){
   const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=1y&includePrePost=false`;
-  let lastErr;
+  const errors=[];
   for(const mk of PROXIES){
     try{
-      const r=await fetchWithTimeout(mk(url),9000);
+      const r=await fetchWithTimeout(mk(url),12000);
       if(!r.ok) throw new Error(`HTTP ${r.status}`);
       const j=await r.json();
       const meta=j?.chart?.result?.[0]?.meta;
@@ -449,17 +452,17 @@ async function fetchYahoo(sym){
       const prevClose=meta.chartPreviousClose||meta.regularMarketPreviousClose;
       if(!current) throw new Error('Missing price');
       return {current,peak:peak||current,low52:low52||current,prevClose:prevClose||current};
-    }catch(e){lastErr=e;}
+    }catch(e){errors.push(e.message);}
   }
-  throw new Error(`All proxies failed for ${sym}: ${lastErr?.message}`);
+  throw new Error(`All proxies failed for ${sym}: ${errors.join(' | ')}`);
 }
 
 async function fetchYahooHistory(sym, range='6mo', interval='1d'){
   const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=${interval}&range=${range}&includePrePost=false`;
-  let lastErr;
+  const errors=[];
   for(const mk of PROXIES){
     try{
-      const r=await fetchWithTimeout(mk(url),9000);
+      const r=await fetchWithTimeout(mk(url),12000);
       if(!r.ok) throw new Error(`HTTP ${r.status}`);
       const j=await r.json();
       const result=j?.chart?.result?.[0];
@@ -469,14 +472,14 @@ async function fetchYahooHistory(sym, range='6mo', interval='1d'){
       const closes=result.indicators?.quote?.[0]?.close||[];
       const current=meta.regularMarketPrice||meta.chartPreviousClose;
       const prevClose=meta.chartPreviousClose||meta.regularMarketPreviousClose;
-      // filter nulls
       const points=timestamps.map((t,i)=>({t,c:closes[i]})).filter(p=>p.c!=null);
       return {current,prevClose:prevClose||current,points};
-    }catch(e){lastErr=e;}
+    }catch(e){errors.push(e.message);}
   }
-  throw new Error(`History failed for ${sym}: ${lastErr?.message}`);
+  throw new Error(`History failed for ${sym}: ${errors.join(' | ')}`);
 }
-  if(paused&&!manual) return;
+
+async function fetchAll(manual=false){
   document.getElementById('rfsh-btn').disabled=true;
   document.getElementById('err-box').classList.remove('show');
   try{
