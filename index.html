@@ -115,10 +115,11 @@
   .badge.hit{animation:blink 2s step-end infinite;}
   @keyframes blink{0%,100%{opacity:1;}50%{opacity:.35;}}
 
-  /* ── INDICATORS ROW (4 cards) ── */
-  .grid-4{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:28px;}
-  @media(max-width:1024px){.grid-4{grid-template-columns:1fr 1fr;}}
-  @media(max-width:580px){.grid-4{grid-template-columns:1fr;}}
+  /* ── INDICATORS ROW (5 cards) ── */
+  .grid-4{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:28px;}
+  @media(max-width:1200px){.grid-4{grid-template-columns:1fr 1fr 1fr;}}
+  @media(max-width:700px){.grid-4{grid-template-columns:1fr 1fr;}}
+  @media(max-width:440px){.grid-4{grid-template-columns:1fr;}}
 
   /* indicator card shared */
   .ind-card{background:var(--bg2);border:1px solid var(--border);padding:18px;position:relative;overflow:hidden;}
@@ -272,6 +273,48 @@
       <div class="ind-sub" id="gold-chg" style="color:var(--text-dim);">Loading…</div>
     </div>
 
+    <!-- DXY (6-month chart) -->
+    <div class="ind-card" id="card-dxy" style="--card-accent:#a78bfa;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div>
+          <div class="ind-name">DXY</div>
+          <div class="ind-tick">DX-Y.NYB · USD INDEX</div>
+        </div>
+        <div style="text-align:right;">
+          <div style="font-family:var(--cond);font-size:26px;font-weight:900;color:#a78bfa;line-height:1;transition:color .5s;" id="dxy-val">—</div>
+          <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;margin-top:2px;" id="dxy-chg">Loading…</div>
+        </div>
+      </div>
+      <!-- Sparkline chart -->
+      <div style="margin-top:12px;position:relative;">
+        <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--text-dim);letter-spacing:.08em;margin-bottom:4px;">
+          <span>6-MONTH CHART</span>
+          <span id="dxy-range-lbl">—</span>
+        </div>
+        <svg id="dxy-chart" width="100%" height="80" viewBox="0 0 220 80" preserveAspectRatio="none"
+             style="display:block;overflow:visible;">
+          <defs>
+            <linearGradient id="dxy-grad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.25"/>
+              <stop offset="100%" stop-color="#a78bfa" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path id="dxy-area"  fill="url(#dxy-grad)" stroke="none" d=""/>
+          <path id="dxy-line"  fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linejoin="round" d=""/>
+          <circle id="dxy-dot" r="3" fill="#a78bfa" stroke="var(--bg2)" stroke-width="1.5" cx="0" cy="0" style="display:none;"/>
+        </svg>
+        <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--text-dim);margin-top:3px;">
+          <span id="dxy-date-start">—</span>
+          <span id="dxy-date-end">Today</span>
+        </div>
+      </div>
+      <!-- Hi/Lo row -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;padding:8px;background:var(--bg3);border:1px solid var(--border);">
+        <div><div class="plbl">6-Mo Low</div> <div class="pval" style="color:var(--green);font-size:12px;" id="dxy-lo">—</div></div>
+        <div><div class="plbl">6-Mo High</div><div class="pval" style="color:#a78bfa;font-size:12px;"      id="dxy-hi">—</div></div>
+      </div>
+    </div>
+
     <!-- DOW JONES (peak-to-trough drawdown) -->
     <div class="ind-card" id="card-dji" style="--card-accent:var(--blue);">
       <div class="ind-name">Dow Jones</div>
@@ -362,7 +405,7 @@ const PROXIES=[
 ];
 
 /* ═══ STATE ════════════════════════════════════ */
-let spData=null,ndxData=null,goldData=null,djiData=null,vixData=null,wtiData=null;
+let spData=null,ndxData=null,goldData=null,dxyData=null,djiData=null,vixData=null,wtiData=null;
 let paused=false,cdSec=REFRESH_OPEN,cdTimer=null,rfTimer=null;
 
 /* ═══ UTILS ════════════════════════════════════ */
@@ -411,17 +454,39 @@ async function fetchYahoo(sym){
   throw new Error(`All proxies failed for ${sym}: ${lastErr?.message}`);
 }
 
-async function fetchAll(manual=false){
+async function fetchYahooHistory(sym, range='6mo', interval='1d'){
+  const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=${interval}&range=${range}&includePrePost=false`;
+  let lastErr;
+  for(const mk of PROXIES){
+    try{
+      const r=await fetchWithTimeout(mk(url),9000);
+      if(!r.ok) throw new Error(`HTTP ${r.status}`);
+      const j=await r.json();
+      const result=j?.chart?.result?.[0];
+      if(!result) throw new Error('No result');
+      const meta=result.meta;
+      const timestamps=result.timestamp||[];
+      const closes=result.indicators?.quote?.[0]?.close||[];
+      const current=meta.regularMarketPrice||meta.chartPreviousClose;
+      const prevClose=meta.chartPreviousClose||meta.regularMarketPreviousClose;
+      // filter nulls
+      const points=timestamps.map((t,i)=>({t,c:closes[i]})).filter(p=>p.c!=null);
+      return {current,prevClose:prevClose||current,points};
+    }catch(e){lastErr=e;}
+  }
+  throw new Error(`History failed for ${sym}: ${lastErr?.message}`);
+}
   if(paused&&!manual) return;
   document.getElementById('rfsh-btn').disabled=true;
   document.getElementById('err-box').classList.remove('show');
   try{
-    const [sp,ndx,gold,dji,vix,wti]=await Promise.all([
+    const [sp,ndx,gold,dji,vix,wti,dxy]=await Promise.all([
       fetchYahoo('^GSPC'), fetchYahoo('^IXIC'),
       fetchYahoo('GC=F'),  fetchYahoo('^DJI'),
       fetchYahoo('^VIX'),  fetchYahoo('CL=F'),
+      fetchYahooHistory('DX-Y.NYB','6mo','1d'),
     ]);
-    spData=sp; ndxData=ndx; goldData=gold; djiData=dji; vixData=vix; wtiData=wti;
+    spData=sp; ndxData=ndx; goldData=gold; djiData=dji; vixData=vix; wtiData=wti; dxyData=dxy;
     renderAll();
     document.getElementById('ts').textContent=
       'Updated '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
@@ -483,10 +548,11 @@ function toggleAlerts(){
 
 /* ═══ RENDER ═══════════════════════════════════ */
 function renderAll(){
-  if(!spData||!ndxData||!goldData||!djiData||!vixData||!wtiData) return;
+  if(!spData||!ndxData||!goldData||!dxyData||!djiData||!vixData||!wtiData) return;
   renderDrawdown('sp',  spData,  'card-sp',  'sp-chips');
   renderDrawdown('ndx', ndxData, 'card-ndx', 'ndx-chips');
   renderGold();
+  renderDxy();
   renderDji();
   renderVix();
   renderWti();
@@ -525,7 +591,61 @@ function renderIndicatorBar(barId,cur,lo,hi,gradient){
   bar.style.background=gradient;
 }
 
-function renderGold(){
+function renderDxy(){
+  const {current, prevClose, points} = dxyData;
+  const chg=current-prevClose, chgPct=prevClose>0?(chg/prevClose*100):0;
+  const sign=chg>=0?'+':'';
+  const color=chg>=0?'var(--green)':'var(--red)';
+
+  document.getElementById('dxy-val').textContent=current.toFixed(2);
+  const chgEl=document.getElementById('dxy-chg');
+  chgEl.textContent=`${sign}${Math.abs(chg).toFixed(2)} (${sign}${chgPct.toFixed(2)}%) TODAY`;
+  chgEl.style.color=color;
+
+  if(!points.length) return;
+
+  const closes=points.map(p=>p.c);
+  const lo=Math.min(...closes), hi=Math.max(...closes);
+  const pad=2, W=220, H=80;
+
+  document.getElementById('dxy-lo').textContent=lo.toFixed(2);
+  document.getElementById('dxy-hi').textContent=hi.toFixed(2);
+  document.getElementById('dxy-range-lbl').textContent=`${lo.toFixed(1)} – ${hi.toFixed(1)}`;
+
+  // Date labels
+  const startDate=new Date(points[0].t*1000);
+  const endDate=new Date(points[points.length-1].t*1000);
+  const fmtDate=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  document.getElementById('dxy-date-start').textContent=fmtDate(startDate);
+  document.getElementById('dxy-date-end').textContent=fmtDate(endDate);
+
+  // Build SVG path points
+  const n=closes.length;
+  const xs=closes.map((_,i)=>pad+(i/(n-1))*(W-pad*2));
+  const ys=closes.map(c=>pad+(1-(c-lo)/(hi-lo||1))*(H-pad*2));
+
+  const linePts=xs.map((x,i)=>`${i===0?'M':'L'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ');
+  const areaPts=linePts+` L${xs[n-1].toFixed(1)},${H} L${xs[0].toFixed(1)},${H} Z`;
+
+  document.getElementById('dxy-line').setAttribute('d', linePts);
+  document.getElementById('dxy-area').setAttribute('d', areaPts);
+
+  // End dot
+  const dot=document.getElementById('dxy-dot');
+  dot.setAttribute('cx', xs[n-1].toFixed(1));
+  dot.setAttribute('cy', ys[n-1].toFixed(1));
+  dot.style.display='block';
+  dot.setAttribute('fill', chg>=0?'var(--green)':'var(--red)');
+  dot.setAttribute('stroke-width','1.5');
+
+  // Color line based on direction
+  const lineColor=chg>=0?'var(--green)':'var(--red)';
+  document.getElementById('dxy-line').setAttribute('stroke', lineColor);
+  document.getElementById('card-dxy').style.setProperty('--card-accent', lineColor);
+  // update gradient stop color
+  document.querySelector('#dxy-grad stop:first-child').setAttribute('stop-color', lineColor);
+}
+
   const v=goldData.current;
   const chg=v-goldData.prevClose, chgPct=goldData.prevClose>0?(chg/goldData.prevClose*100):0;
   const sign=chg>=0?'+':'';
