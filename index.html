@@ -6,554 +6,705 @@
 <title>Market Drawdown Monitor</title>
 <link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg:#08090c; --bg2:#0e1018; --bg3:#141820;
-    --border:#1e2535; --border2:#252e42;
-    --amber:#f5a623; --green:#00c896; --red:#ff4560; --blue:#3d8bff; --cyan:#06b6d4;
-    --gold-color:#ffd700;
-    --text:#c8d4e8; --text-dim:#5a6880; --text-bright:#eaf0ff;
-    --mono:'Share Tech Mono',monospace; --cond:'Barlow Condensed',sans-serif;
-    --c5:#f5c842; --c10:#f5a623; --c15:#f07c1e; --c20:#e85418; --c25:#e03030; --c30:#c01040;
-    --vix-calm:#00c896; --vix-elevated:#f5c842; --vix-fear:#f07c1e; --vix-panic:#e03030;
-  }
-  *{margin:0;padding:0;box-sizing:border-box;}
-  body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;overflow-x:hidden;}
-  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(61,139,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(61,139,255,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
-  .wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:28px 24px;}
+:root {
+  --bg:#08090c; --bg2:#0e1018; --bg3:#141820;
+  --border:#1e2535; --border2:#252e42;
+  --amber:#f5a623; --green:#00c896; --red:#ff4560; --blue:#3d8bff; --cyan:#06b6d4;
+  --gold-color:#ffd700; --purple:#a78bfa;
+  --text:#c8d4e8; --text-dim:#5a6880; --text-bright:#eaf0ff;
+  --mono:'Share Tech Mono',monospace; --cond:'Barlow Condensed',sans-serif;
+  --c5:#f5c842; --c10:#f5a623; --c15:#f07c1e; --c20:#e85418; --c25:#e03030; --c30:#c01040;
+  --vix-calm:#00c896; --vix-elev:#f5c842; --vix-fear:#f07c1e; --vix-panic:#e03030;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;overflow-x:hidden;}
+body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(61,139,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(61,139,255,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+.wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:28px 24px;}
 
-  /* HEADER */
-  header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap;}
-  .logo-line{display:flex;align-items:center;gap:12px;margin-bottom:4px;}
-  .logo-dot{width:10px;height:10px;border-radius:50%;background:var(--amber);box-shadow:0 0 12px var(--amber);animation:pulse 2s ease-in-out infinite;flex-shrink:0;}
-  @keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 12px var(--amber);}50%{opacity:.5;box-shadow:0 0 4px var(--amber);}}
-  h1{font-family:var(--cond);font-size:26px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--text-bright);}
-  .subtitle{font-size:11px;color:var(--text-dim);letter-spacing:.2em;text-transform:uppercase;margin-left:22px;}
-  .hdr-r{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
-  .hdr-btns{display:flex;gap:8px;}
-  .btn{background:transparent;border:1px solid var(--border2);color:var(--amber);font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:8px 14px;cursor:pointer;transition:all .2s;}
-  .btn:hover{border-color:var(--amber);background:rgba(245,166,35,.08);}
-  .btn:disabled{opacity:.35;cursor:not-allowed;}
-  .btn.blue{color:var(--blue);}
-  .btn.blue:hover{border-color:var(--blue);background:rgba(61,139,255,.08);}
-  #ts{font-size:10px;color:var(--text-dim);letter-spacing:.1em;}
+/* HEADER */
+header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap;}
+.logo-line{display:flex;align-items:center;gap:12px;margin-bottom:4px;}
+.logo-dot{width:10px;height:10px;border-radius:50%;background:var(--amber);box-shadow:0 0 12px var(--amber);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 12px var(--amber);}50%{opacity:.5;box-shadow:0 0 4px var(--amber);}}
+h1{font-family:var(--cond);font-size:26px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:var(--text-bright);}
+.subtitle{font-size:11px;color:var(--text-dim);letter-spacing:.2em;text-transform:uppercase;margin-left:22px;}
+.hdr-r{display:flex;flex-direction:column;align-items:flex-end;gap:8px;}
+.hdr-btns{display:flex;gap:8px;}
+.btn{background:transparent;border:1px solid var(--border2);color:var(--amber);font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;padding:8px 14px;cursor:pointer;transition:all .2s;}
+.btn:hover{border-color:var(--amber);background:rgba(245,166,35,.08);}
+.btn:disabled{opacity:.35;cursor:not-allowed;}
+.btn.blue{color:var(--blue);}
+.btn.blue:hover{border-color:var(--blue);background:rgba(61,139,255,.08);}
+#ts{font-size:10px;color:var(--text-dim);letter-spacing:.1em;}
 
-  /* STATUS BAR */
-  .sbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--text-dim);margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);}
-  .sep{color:var(--border2);}
-  .ldot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:lpulse 2s ease-in-out infinite;}
-  .ldot.err{background:var(--red);animation:none;}
-  .ldot.paused{background:var(--text-dim);animation:none;}
-  @keyframes lpulse{0%,100%{box-shadow:0 0 0 0 rgba(0,200,150,.5);}50%{box-shadow:0 0 0 5px rgba(0,200,150,0);}}
-  .mkt-badge{font-size:9px;padding:2px 8px;border:1px solid var(--border2);letter-spacing:.15em;text-transform:uppercase;}
-  .mkt-badge.open{color:var(--green);border-color:#00644c;}
-  .mkt-badge.closed{color:var(--text-dim);}
-  #cd-wrap{margin-left:auto;display:flex;align-items:center;gap:8px;}
-  #cd-track{width:80px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
-  #cd-fill{height:100%;width:100%;background:var(--amber);border-radius:2px;transition:width 1s linear;}
-  #cd-txt{font-size:10px;color:var(--text-dim);min-width:32px;text-align:right;}
+/* STATUS BAR */
+.sbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--text-dim);margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.sep{color:var(--border2);}
+.ldot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:lpulse 2s ease-in-out infinite;}
+.ldot.err{background:var(--red);animation:none;}
+.ldot.paused{background:var(--text-dim);animation:none;}
+@keyframes lpulse{0%,100%{box-shadow:0 0 0 0 rgba(0,200,150,.5);}50%{box-shadow:0 0 0 5px rgba(0,200,150,0);}}
+.mkt-badge{font-size:9px;padding:2px 8px;border:1px solid var(--border2);letter-spacing:.15em;text-transform:uppercase;}
+.mkt-badge.open{color:var(--green);border-color:#00644c;}
+.mkt-badge.closed{color:var(--text-dim);}
+#cd-wrap{margin-left:auto;display:flex;align-items:center;gap:8px;}
+#cd-track{width:80px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+#cd-fill{height:100%;width:100%;background:var(--amber);border-radius:2px;transition:width 1s linear;}
+#cd-txt{font-size:10px;color:var(--text-dim);min-width:32px;text-align:right;}
 
-  /* ERROR */
-  .err-box{background:rgba(255,69,96,.08);border:1px solid rgba(255,69,96,.3);padding:14px 18px;color:var(--red);font-size:12px;line-height:1.7;display:none;margin-bottom:18px;}
-  .err-box.show{display:block;}
+/* ERROR */
+.err-box{background:rgba(255,69,96,.08);border:1px solid rgba(255,69,96,.3);padding:14px 18px;color:var(--red);font-size:11px;line-height:1.8;display:none;margin-bottom:18px;word-break:break-all;}
+.err-box.show{display:block;}
 
-  /* SECTION LABEL */
-  .section-label{font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-  .section-label::before{content:'';display:inline-block;width:20px;height:1px;background:var(--border2);}
-  .section-label::after{content:'';flex:1;height:1px;background:var(--border);}
+/* SECTION LABEL */
+.section-label{font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
+.section-label::before{content:'';display:inline-block;width:20px;height:1px;background:var(--border2);}
+.section-label::after{content:'';flex:1;height:1px;background:var(--border);}
 
-  /* ── DRAWDOWN CARDS (S&P + NASDAQ) ── */
-  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;}
-  @media(max-width:680px){.grid-2{grid-template-columns:1fr;}}
+/* DRAWDOWN CARDS */
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;}
+@media(max-width:680px){.grid-2{grid-template-columns:1fr;}}
 
-  .card{background:var(--bg2);border:1px solid var(--border);padding:22px;position:relative;overflow:hidden;}
-  .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--card-accent,var(--amber)),transparent);transition:background .6s;}
+.card{background:var(--bg2);border:1px solid var(--border);padding:22px;position:relative;overflow:hidden;}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--card-accent,var(--amber)),transparent);transition:background .6s;}
+.card-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
+.idx-name{font-family:var(--cond);font-size:22px;font-weight:900;letter-spacing:.1em;color:var(--text-bright);text-transform:uppercase;}
+.idx-tick{font-size:10px;color:var(--text-dim);margin-top:2px;letter-spacing:.15em;}
+.decline{font-family:var(--cond);font-size:34px;font-weight:900;text-align:right;line-height:1;transition:color .5s;}
+.decline-sub{font-size:9px;color:var(--text-dim);text-align:right;letter-spacing:.15em;text-transform:uppercase;margin-top:3px;}
 
-  .card-hdr{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;}
-  .idx-name{font-family:var(--cond);font-size:22px;font-weight:900;letter-spacing:.1em;color:var(--text-bright);text-transform:uppercase;}
-  .idx-tick{font-size:10px;color:var(--text-dim);margin-top:2px;letter-spacing:.15em;}
-  .decline{font-family:var(--cond);font-size:34px;font-weight:900;text-align:right;line-height:1;transition:color .5s;}
-  .decline-sub{font-size:9px;color:var(--text-dim);text-align:right;letter-spacing:.15em;text-transform:uppercase;margin-top:3px;}
+.prow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;padding:12px;background:var(--bg3);border:1px solid var(--border);}
+.plbl{font-size:9px;color:var(--text-dim);letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px;}
+.pval{font-size:14px;}
+.peak-v{color:var(--green);} .cur-v{color:var(--amber);} .loss-v{color:var(--red);}
 
-  .prow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px;padding:12px;background:var(--bg3);border:1px solid var(--border);}
-  .plbl{font-size:9px;color:var(--text-dim);letter-spacing:.15em;text-transform:uppercase;margin-bottom:4px;}
-  .pval{font-size:14px;}
-  .peak-v{color:var(--green);} .cur-v{color:var(--amber);} .loss-v{color:var(--red);}
+.bar-hdr{display:flex;justify-content:space-between;font-size:9px;color:var(--text-dim);letter-spacing:.09em;margin-bottom:6px;}
+.bar-track{height:8px;background:var(--bg3);border:1px solid var(--border);position:relative;overflow:hidden;}
+.bar-fill{height:100%;width:0%;transition:width 1s cubic-bezier(.25,.46,.45,.94);}
+.ticks{position:absolute;inset:0;pointer-events:none;}
+.tick{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.15);}
 
-  .bar-hdr{display:flex;justify-content:space-between;font-size:9px;color:var(--text-dim);letter-spacing:.09em;margin-bottom:6px;}
-  .bar-track{height:8px;background:var(--bg3);border:1px solid var(--border);position:relative;overflow:hidden;}
-  .bar-fill{height:100%;width:0%;transition:width 1s cubic-bezier(.25,.46,.45,.94);}
-  .ticks{position:absolute;inset:0;pointer-events:none;}
-  .tick{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.15);}
+.chips{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-top:14px;}
+.chip{padding:7px 2px;border:1px solid var(--border);text-align:center;transition:all .3s;}
+.chip .cp{font-family:var(--cond);font-size:15px;font-weight:700;color:var(--text-dim);}
+.chip .cl{font-size:8px;color:var(--text-dim);letter-spacing:.08em;margin-top:2px;text-transform:uppercase;}
+.chip.hit{background:rgba(255,255,255,.03);border-color:var(--tc);}
+.chip.hit .cp,.chip.hit .cl{color:var(--tc);}
+.chip.active-chip{animation:throb 1.5s ease-in-out infinite;}
+@keyframes throb{0%,100%{box-shadow:inset 0 0 0 0 transparent;}50%{box-shadow:inset 0 0 8px 0 rgba(255,255,255,.06);}}
+.c5{--tc:var(--c5);} .c10{--tc:var(--c10);} .c15{--tc:var(--c15);}
+.c20{--tc:var(--c20);} .c25{--tc:var(--c25);} .c30{--tc:var(--c30);}
 
-  .chips{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;margin-top:14px;}
-  .chip{padding:7px 2px;border:1px solid var(--border);text-align:center;transition:all .3s;}
-  .chip .cp{font-family:var(--cond);font-size:15px;font-weight:700;color:var(--text-dim);}
-  .chip .cl{font-size:8px;color:var(--text-dim);letter-spacing:.08em;margin-top:2px;text-transform:uppercase;}
-  .chip.hit{background:rgba(255,255,255,.03);border-color:var(--tc);}
-  .chip.hit .cp,.chip.hit .cl{color:var(--tc);}
-  .chip.active{animation:throb 1.5s ease-in-out infinite;}
-  @keyframes throb{0%,100%{box-shadow:inset 0 0 0 0 transparent;}50%{box-shadow:inset 0 0 8px 0 rgba(255,255,255,.06);}}
-  .c5{--tc:var(--c5);} .c10{--tc:var(--c10);} .c15{--tc:var(--c15);}
-  .c20{--tc:var(--c20);} .c25{--tc:var(--c25);} .c30{--tc:var(--c30);}
+/* ALERT PANEL */
+#alerts{background:var(--bg2);border:1px solid var(--border);padding:18px 22px;margin-bottom:28px;}
+.ptitle{font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;}
+.ptitle::before{content:'▶';font-size:8px;color:var(--amber);}
+#alerts-body{overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1),opacity .3s ease;}
+#alerts-body.collapsed{max-height:0!important;opacity:0;pointer-events:none;}
+#alerts-chevron{margin-left:auto;font-size:10px;color:var(--amber);transition:transform .3s;display:inline-block;}
+#alerts-chevron.collapsed{transform:rotate(180deg);}
+.arow{display:flex;align-items:center;gap:12px;padding:9px 12px;background:var(--bg3);border-left:3px solid var(--border2);font-size:11px;margin-bottom:6px;transition:all .3s;}
+.arow:last-child{margin-bottom:0;}
+.aicon{font-size:14px;width:20px;text-align:center;}
+.athr{font-family:var(--cond);font-size:16px;font-weight:700;width:46px;}
+.adesc{flex:1;color:var(--text-dim);}
+.bwrap{display:flex;gap:5px;flex-wrap:wrap;}
+.badge{font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:2px 7px;border:1px solid currentColor;}
+.badge.ok{color:var(--text-dim);border-color:var(--border2);}
+.badge.hit{animation:blink 2s step-end infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.35;}}
 
-  /* ── ALERT PANEL ── */
-  #alerts{background:var(--bg2);border:1px solid var(--border);padding:18px 22px;margin-bottom:28px;}
-  .ptitle{font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
-  .ptitle::before{content:'▶';font-size:8px;color:var(--amber);}
-  #alerts-body{overflow:hidden;transition:max-height .4s cubic-bezier(.4,0,.2,1),opacity .3s ease;}
-  #alerts-body.collapsed{max-height:0!important;opacity:0;}
-  #alerts-chevron.collapsed{transform:rotate(180deg);}
+/* INDICATOR CARDS (5 col) */
+.grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:28px;}
+@media(max-width:1100px){.grid-5{grid-template-columns:1fr 1fr 1fr;}}
+@media(max-width:680px){.grid-5{grid-template-columns:1fr 1fr;}}
+@media(max-width:440px){.grid-5{grid-template-columns:1fr;}}
 
-  .arow{display:flex;align-items:center;gap:12px;padding:9px 12px;background:var(--bg3);border-left:3px solid var(--border2);font-size:11px;margin-bottom:6px;transition:all .3s;}
-  .arow:last-child{margin-bottom:0;}
-  .aicon{font-size:14px;width:20px;text-align:center;}
-  .athr{font-family:var(--cond);font-size:16px;font-weight:700;width:46px;}
-  .adesc{flex:1;color:var(--text-dim);}
-  .bwrap{display:flex;gap:5px;flex-wrap:wrap;}
-  .badge{font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:2px 7px;border:1px solid currentColor;}
-  .badge.ok{color:var(--text-dim);border-color:var(--border2);}
-  .badge.hit{animation:blink 2s step-end infinite;}
-  @keyframes blink{0%,100%{opacity:1;}50%{opacity:.35;}}
+.ind-card{background:var(--bg2);border:1px solid var(--border);padding:18px;position:relative;overflow:hidden;}
+.ind-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--card-accent,var(--amber)),transparent);transition:background .6s;}
+.ind-name{font-family:var(--cond);font-size:16px;font-weight:900;letter-spacing:.1em;color:var(--text-bright);text-transform:uppercase;}
+.ind-tick{font-size:9px;color:var(--text-dim);margin-top:1px;letter-spacing:.12em;margin-bottom:10px;}
+.ind-big{font-family:var(--cond);font-size:32px;font-weight:900;line-height:1;transition:color .5s;margin-bottom:4px;}
+.ind-chg{font-size:9px;letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px;}
+.ind-row2{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:8px;background:var(--bg3);border:1px solid var(--border);margin-bottom:10px;}
+.ind-row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:8px;background:var(--bg3);border:1px solid var(--border);margin-bottom:10px;}
 
-  /* ── INDICATORS ROW (5 cards) ── */
-  .grid-4{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:28px;}
-  @media(max-width:1200px){.grid-4{grid-template-columns:1fr 1fr 1fr;}}
-  @media(max-width:700px){.grid-4{grid-template-columns:1fr 1fr;}}
-  @media(max-width:440px){.grid-4{grid-template-columns:1fr;}}
+/* Mini bar */
+.mbar-hdr{display:flex;justify-content:space-between;font-size:8px;color:var(--text-dim);margin-bottom:4px;letter-spacing:.08em;}
+.mbar-track{height:6px;background:var(--bg3);border:1px solid var(--border);position:relative;overflow:hidden;}
+.mbar-fill{height:100%;width:0%;transition:width 1s cubic-bezier(.25,.46,.45,.94);}
+.mticks{position:absolute;inset:0;pointer-events:none;}
+.mtick{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.15);}
 
-  /* indicator card shared */
-  .ind-card{background:var(--bg2);border:1px solid var(--border);padding:18px;position:relative;overflow:hidden;}
-  .ind-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,var(--card-accent,var(--amber)),transparent);transition:background .6s;}
-  .ind-name{font-family:var(--cond);font-size:16px;font-weight:900;letter-spacing:.1em;color:var(--text-bright);text-transform:uppercase;}
-  .ind-tick{font-size:9px;color:var(--text-dim);margin-top:1px;letter-spacing:.12em;}
-  .ind-val{font-family:var(--cond);font-size:36px;font-weight:900;line-height:1;margin:12px 0 4px;transition:color .5s;}
-  .ind-sub{font-size:9px;letter-spacing:.15em;text-transform:uppercase;transition:color .5s;margin-bottom:14px;}
-  .ind-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:12px;}
-  .ind-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:10px;background:var(--bg3);border:1px solid var(--border);margin-bottom:12px;}
+/* VIX zones */
+.vzones{display:grid;grid-template-columns:repeat(4,1fr);gap:3px;margin-top:8px;}
+.vzone{padding:5px 2px;border:1px solid var(--border);text-align:center;transition:all .3s;}
+.vzone .vz-v{font-family:var(--cond);font-size:11px;font-weight:700;color:var(--text-dim);}
+.vzone .vz-l{font-size:7px;color:var(--text-dim);letter-spacing:.07em;margin-top:1px;text-transform:uppercase;}
+.vzone.lit{border-color:var(--ztc);}
+.vzone.lit .vz-v,.vzone.lit .vz-l{color:var(--ztc);}
+.vzone.zone-active{animation:throb 1.5s ease-in-out infinite;}
 
-  /* mini bar */
-  .mini-bar-hdr{display:flex;justify-content:space-between;font-size:8px;color:var(--text-dim);margin-bottom:5px;letter-spacing:.08em;}
-  .mini-bar-track{height:6px;background:var(--bg3);border:1px solid var(--border);position:relative;overflow:hidden;}
-  .mini-bar-fill{height:100%;width:0%;transition:width 1s cubic-bezier(.25,.46,.45,.94);}
-  .mini-ticks{position:absolute;inset:0;pointer-events:none;}
-  .mini-tick{position:absolute;top:0;bottom:0;width:1px;background:rgba(255,255,255,.15);}
+/* DXY mini chart */
+.dxy-chart-wrap{margin-top:10px;}
+.dxy-chart-hdr{display:flex;justify-content:space-between;font-size:8px;color:var(--text-dim);margin-bottom:4px;letter-spacing:.08em;}
+.dxy-dates{display:flex;justify-content:space-between;font-size:8px;color:var(--text-dim);margin-top:3px;}
 
-  /* VIX fear zones */
-  .fear-zones{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;margin-top:10px;}
-  .fzone{padding:5px 2px;border:1px solid var(--border);text-align:center;transition:all .3s;}
-  .fzone .fz-val{font-family:var(--cond);font-size:12px;font-weight:700;color:var(--text-dim);}
-  .fzone .fz-lbl{font-size:7px;color:var(--text-dim);letter-spacing:.07em;margin-top:1px;text-transform:uppercase;}
-  .fzone.lit .fz-val,.fzone.lit .fz-lbl{color:var(--tc);}
-  .fzone.lit{border-color:var(--tc);}
-  .fzone.fzone-active{animation:throb 1.5s ease-in-out infinite;}
-
-  /* FOOTER */
-  .foot{font-size:10px;color:var(--text-dim);border-top:1px solid var(--border);padding-top:14px;line-height:1.8;}
+/* FOOTER */
+.foot{font-size:10px;color:var(--text-dim);border-top:1px solid var(--border);padding-top:14px;line-height:1.8;}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-  <!-- HEADER -->
-  <header>
-    <div>
-      <div class="logo-line"><div class="logo-dot"></div><h1>Market Monitor</h1></div>
-      <div class="subtitle">S&amp;P 500 · NASDAQ · Drawdown &amp; Indicators Tracker</div>
-    </div>
-    <div class="hdr-r">
-      <div class="hdr-btns">
-        <button class="btn blue" id="pause-btn" onclick="togglePause()">⏸ Pause</button>
-        <button class="btn" id="rfsh-btn" onclick="fetchAll(true)">⟳ Refresh</button>
-      </div>
-      <div id="ts">—</div>
-    </div>
-  </header>
-
-  <!-- STATUS BAR -->
-  <div class="sbar">
-    <span class="ldot" id="ldot"></span>
-    <span id="live-lbl">LIVE · AUTO-REFRESH 60s</span>
-    <span class="sep">|</span>
-    <span class="mkt-badge closed" id="mkt-badge">MARKET CLOSED</span>
-    <span class="sep">|</span>
-    <span>YAHOO FINANCE</span>
-    <div id="cd-wrap">
-      <div id="cd-track"><div id="cd-fill"></div></div>
-      <span id="cd-txt">60s</span>
-    </div>
+<!-- HEADER -->
+<header>
+  <div>
+    <div class="logo-line"><div class="logo-dot"></div><h1>Market Monitor</h1></div>
+    <div class="subtitle">S&amp;P 500 · NASDAQ · Drawdown &amp; Indicators Tracker</div>
   </div>
-
-  <div class="err-box" id="err-box"></div>
-
-  <!-- ── S&P 500 + NASDAQ DRAWDOWN CARDS ── -->
-  <div class="section-label">Drawdown Tracker · 52-Wk High as Peak</div>
-  <div class="grid-2">
-
-    <!-- S&P 500 -->
-    <div class="card" id="card-sp">
-      <div class="card-hdr">
-        <div><div class="idx-name">S&amp;P 500</div><div class="idx-tick">^GSPC · US LARGE CAP</div></div>
-        <div><div class="decline" id="sp-d">—</div><div class="decline-sub">from 52-wk peak</div></div>
-      </div>
-      <div class="prow">
-        <div><div class="plbl">52-Wk Peak</div><div class="pval peak-v" id="sp-pk">—</div></div>
-        <div><div class="plbl">Current</div>  <div class="pval cur-v"  id="sp-c">—</div></div>
-        <div><div class="plbl">Pts Lost</div> <div class="pval loss-v" id="sp-l">—</div></div>
-      </div>
-      <div class="bar-hdr"><span>DRAWDOWN DEPTH</span><span>0 ──────── 30%</span></div>
-      <div class="bar-track">
-        <div class="bar-fill" id="sp-bar"></div>
-        <div class="ticks">
-          <div class="tick" style="left:16.67%"></div><div class="tick" style="left:33.33%"></div>
-          <div class="tick" style="left:50%"></div><div class="tick" style="left:66.67%"></div>
-          <div class="tick" style="left:83.33%"></div>
-        </div>
-      </div>
-      <div class="chips" id="sp-chips">
-        <div class="chip c5"  data-p="5"><div class="cp">−5%</div><div class="cl">Pullback</div></div>
-        <div class="chip c10" data-p="10"><div class="cp">−10%</div><div class="cl">Correction</div></div>
-        <div class="chip c15" data-p="15"><div class="cp">−15%</div><div class="cl">Sharp</div></div>
-        <div class="chip c20" data-p="20"><div class="cp">−20%</div><div class="cl">Bear Mkt</div></div>
-        <div class="chip c25" data-p="25"><div class="cp">−25%</div><div class="cl">Severe</div></div>
-        <div class="chip c30" data-p="30"><div class="cp">−30%</div><div class="cl">Crash</div></div>
-      </div>
+  <div class="hdr-r">
+    <div class="hdr-btns">
+      <button class="btn blue" id="pause-btn" onclick="togglePause()">⏸ Pause</button>
+      <button class="btn" id="rfsh-btn" onclick="fetchAll(true)">⟳ Refresh</button>
     </div>
-
-    <!-- NASDAQ -->
-    <div class="card" id="card-ndx">
-      <div class="card-hdr">
-        <div><div class="idx-name">NASDAQ</div><div class="idx-tick">^IXIC · TECH COMPOSITE</div></div>
-        <div><div class="decline" id="ndx-d">—</div><div class="decline-sub">from 52-wk peak</div></div>
-      </div>
-      <div class="prow">
-        <div><div class="plbl">52-Wk Peak</div><div class="pval peak-v" id="ndx-pk">—</div></div>
-        <div><div class="plbl">Current</div>  <div class="pval cur-v"  id="ndx-c">—</div></div>
-        <div><div class="plbl">Pts Lost</div> <div class="pval loss-v" id="ndx-l">—</div></div>
-      </div>
-      <div class="bar-hdr"><span>DRAWDOWN DEPTH</span><span>0 ──────── 30%</span></div>
-      <div class="bar-track">
-        <div class="bar-fill" id="ndx-bar"></div>
-        <div class="ticks">
-          <div class="tick" style="left:16.67%"></div><div class="tick" style="left:33.33%"></div>
-          <div class="tick" style="left:50%"></div><div class="tick" style="left:66.67%"></div>
-          <div class="tick" style="left:83.33%"></div>
-        </div>
-      </div>
-      <div class="chips" id="ndx-chips">
-        <div class="chip c5"  data-p="5"><div class="cp">−5%</div><div class="cl">Pullback</div></div>
-        <div class="chip c10" data-p="10"><div class="cp">−10%</div><div class="cl">Correction</div></div>
-        <div class="chip c15" data-p="15"><div class="cp">−15%</div><div class="cl">Sharp</div></div>
-        <div class="chip c20" data-p="20"><div class="cp">−20%</div><div class="cl">Bear Mkt</div></div>
-        <div class="chip c25" data-p="25"><div class="cp">−25%</div><div class="cl">Severe</div></div>
-        <div class="chip c30" data-p="30"><div class="cp">−30%</div><div class="cl">Crash</div></div>
-      </div>
-    </div>
+    <div id="ts">—</div>
   </div>
+</header>
 
-  <!-- ── ALERT THRESHOLDS (collapsible, default open) ── -->
-  <div id="alerts">
-    <div class="ptitle" onclick="toggleAlerts()" style="cursor:pointer;user-select:none;">
-      Alert Thresholds
-      <span id="alerts-chevron" style="margin-left:auto;font-size:10px;color:var(--amber);transition:transform .3s;display:inline-block;">▲</span>
-    </div>
-    <div id="alerts-body">
-      <div id="alert-rows"></div>
-    </div>
-  </div>
-
-  <!-- ── INDICATORS ROW: Gold · Dow Jones · VIX · WTI ── -->
-  <div class="section-label">Market Indicators</div>
-  <div class="grid-4">
-
-    <!-- GOLD (spot price only) -->
-    <div class="ind-card" id="card-gold" style="--card-accent:var(--gold-color);">
-      <div class="ind-name">Gold</div>
-      <div class="ind-tick">GC=F · NYMEX SPOT</div>
-      <div class="ind-val" id="gold-val" style="color:var(--gold-color);">—</div>
-      <div class="ind-sub" id="gold-chg" style="color:var(--text-dim);">Loading…</div>
-    </div>
-
-    <!-- DXY (6-month chart) -->
-    <div class="ind-card" id="card-dxy" style="--card-accent:#a78bfa;">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
-        <div>
-          <div class="ind-name">DXY</div>
-          <div class="ind-tick">DX-Y.NYB · USD INDEX</div>
-        </div>
-        <div style="text-align:right;">
-          <div style="font-family:var(--cond);font-size:26px;font-weight:900;color:#a78bfa;line-height:1;transition:color .5s;" id="dxy-val">—</div>
-          <div style="font-size:9px;letter-spacing:.12em;text-transform:uppercase;margin-top:2px;" id="dxy-chg">Loading…</div>
-        </div>
-      </div>
-      <!-- Sparkline chart -->
-      <div style="margin-top:12px;position:relative;">
-        <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--text-dim);letter-spacing:.08em;margin-bottom:4px;">
-          <span>6-MONTH CHART</span>
-          <span id="dxy-range-lbl">—</span>
-        </div>
-        <svg id="dxy-chart" width="100%" height="80" viewBox="0 0 220 80" preserveAspectRatio="none"
-             style="display:block;overflow:visible;">
-          <defs>
-            <linearGradient id="dxy-grad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stop-color="#a78bfa" stop-opacity="0.25"/>
-              <stop offset="100%" stop-color="#a78bfa" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-          <path id="dxy-area"  fill="url(#dxy-grad)" stroke="none" d=""/>
-          <path id="dxy-line"  fill="none" stroke="#a78bfa" stroke-width="1.5" stroke-linejoin="round" d=""/>
-          <circle id="dxy-dot" r="3" fill="#a78bfa" stroke="var(--bg2)" stroke-width="1.5" cx="0" cy="0" style="display:none;"/>
-        </svg>
-        <div style="display:flex;justify-content:space-between;font-size:8px;color:var(--text-dim);margin-top:3px;">
-          <span id="dxy-date-start">—</span>
-          <span id="dxy-date-end">Today</span>
-        </div>
-      </div>
-      <!-- Hi/Lo row -->
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;padding:8px;background:var(--bg3);border:1px solid var(--border);">
-        <div><div class="plbl">6-Mo Low</div> <div class="pval" style="color:var(--green);font-size:12px;" id="dxy-lo">—</div></div>
-        <div><div class="plbl">6-Mo High</div><div class="pval" style="color:#a78bfa;font-size:12px;"      id="dxy-hi">—</div></div>
-      </div>
-    </div>
-
-    <!-- DOW JONES (peak-to-trough drawdown) -->
-    <div class="ind-card" id="card-dji" style="--card-accent:var(--blue);">
-      <div class="ind-name">Dow Jones</div>
-      <div class="ind-tick">^DJI · BLUE CHIP 30</div>
-      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin:10px 0 12px;">
-        <div style="font-size:9px;color:var(--text-dim);letter-spacing:.12em;text-transform:uppercase;margin-top:4px;">from 52-wk peak</div>
-        <div class="decline" id="dji-d" style="font-size:28px;">—</div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;padding:10px;background:var(--bg3);border:1px solid var(--border);">
-        <div><div class="plbl">52-Wk Peak</div><div class="pval peak-v" style="font-size:12px;" id="dji-pk">—</div></div>
-        <div><div class="plbl">Current</div>  <div class="pval cur-v"  style="font-size:12px;" id="dji-c">—</div></div>
-        <div><div class="plbl">Pts Lost</div> <div class="pval loss-v" style="font-size:12px;" id="dji-l">—</div></div>
-      </div>
-      <div class="mini-bar-hdr"><span>DRAWDOWN DEPTH</span><span>0 ──── 30%</span></div>
-      <div class="mini-bar-track">
-        <div class="mini-bar-fill" id="dji-bar"></div>
-        <div class="mini-ticks">
-          <div class="mini-tick" style="left:16.67%"></div><div class="mini-tick" style="left:33.33%"></div>
-          <div class="mini-tick" style="left:50%"></div><div class="mini-tick" style="left:66.67%"></div>
-          <div class="mini-tick" style="left:83.33%"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- VIX -->
-    <div class="ind-card" id="card-vix" style="--card-accent:var(--vix-calm);">
-      <div class="ind-name">VIX</div>
-      <div class="ind-tick">^VIX · CBOE VOLATILITY</div>
-      <div class="ind-val" id="vix-val">—</div>
-      <div class="ind-sub" id="vix-lbl">Loading…</div>
-      <div class="ind-row">
-        <div><div class="plbl">52-Wk Low</div> <div class="pval" style="color:var(--green);font-size:12px;" id="vix-lo">—</div></div>
-        <div><div class="plbl">52-Wk High</div><div class="pval" style="color:var(--red);font-size:12px;"   id="vix-hi">—</div></div>
-      </div>
-      <div class="mini-bar-hdr"><span>FEAR LEVEL</span><span>0 ──── 60+</span></div>
-      <div class="mini-bar-track"><div class="mini-bar-fill" id="vix-bar"></div></div>
-      <div class="fear-zones" style="margin-top:8px;">
-        <div class="fzone" id="fz-calm"  style="--tc:var(--vix-calm);"><div class="fz-val">&lt;20</div><div class="fz-lbl">Calm</div></div>
-        <div class="fzone" id="fz-elev"  style="--tc:var(--vix-elevated);"><div class="fz-val">20–30</div><div class="fz-lbl">Elevated</div></div>
-        <div class="fzone" id="fz-fear"  style="--tc:var(--vix-fear);"><div class="fz-val">30–40</div><div class="fz-lbl">Fear</div></div>
-        <div class="fzone" id="fz-panic" style="--tc:var(--vix-panic);"><div class="fz-val">40+</div><div class="fz-lbl">Panic</div></div>
-      </div>
-    </div>
-
-    <!-- WTI CRUDE -->
-    <div class="ind-card" id="card-wti" style="--card-accent:var(--cyan);">
-      <div class="ind-name">WTI Crude</div>
-      <div class="ind-tick">CL=F · NYMEX FRONT MONTH</div>
-      <div class="ind-val" id="wti-val" style="color:var(--cyan);">—</div>
-      <div class="ind-sub" id="wti-chg" style="color:var(--text-dim);">Loading…</div>
-      <div class="ind-row-3">
-        <div><div class="plbl">52-Wk Low</div> <div class="pval" style="color:var(--green);font-size:12px;" id="wti-lo">—</div></div>
-        <div><div class="plbl">Current</div>    <div class="pval" style="color:var(--cyan);font-size:12px;"  id="wti-c">—</div></div>
-        <div><div class="plbl">52-Wk High</div><div class="pval" style="color:var(--amber);font-size:12px;" id="wti-hi">—</div></div>
-      </div>
-      <div class="mini-bar-hdr"><span>52-WK RANGE</span><span>LOW → HIGH</span></div>
-      <div class="mini-bar-track">
-        <div class="mini-bar-fill" id="wti-bar" style="background:linear-gradient(90deg,var(--green),var(--cyan));"></div>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="foot">
-    Drawdown = (52-wk high − current) / 52-wk high. Data via Yahoo Finance (≈15-min delay during market hours).
-    Auto-refreshes every 60s while market is open, 5 min when closed. Not financial advice.
+<!-- STATUS BAR -->
+<div class="sbar">
+  <span class="ldot" id="ldot"></span>
+  <span id="live-lbl">LIVE · AUTO-REFRESH 60s</span>
+  <span class="sep">|</span>
+  <span class="mkt-badge closed" id="mkt-badge">MARKET CLOSED</span>
+  <span class="sep">|</span>
+  <span>YAHOO FINANCE</span>
+  <div id="cd-wrap">
+    <div id="cd-track"><div id="cd-fill"></div></div>
+    <span id="cd-txt">—</span>
   </div>
 </div>
 
+<div class="err-box" id="err-box"></div>
+
+<!-- DRAWDOWN CARDS -->
+<div class="section-label">Drawdown Tracker · 52-Wk High as Peak</div>
+<div class="grid-2">
+
+  <!-- S&P 500 -->
+  <div class="card" id="card-sp">
+    <div class="card-hdr">
+      <div><div class="idx-name">S&amp;P 500</div><div class="idx-tick">^GSPC · US LARGE CAP</div></div>
+      <div><div class="decline" id="sp-pct">—</div><div class="decline-sub">from 52-wk peak</div></div>
+    </div>
+    <div class="prow">
+      <div><div class="plbl">52-Wk Peak</div><div class="pval peak-v" id="sp-peak">—</div></div>
+      <div><div class="plbl">Current</div><div class="pval cur-v" id="sp-cur">—</div></div>
+      <div><div class="plbl">Pts Lost</div><div class="pval loss-v" id="sp-loss">—</div></div>
+    </div>
+    <div class="bar-hdr"><span>DRAWDOWN DEPTH</span><span>0 ──────── 30%</span></div>
+    <div class="bar-track">
+      <div class="bar-fill" id="sp-bar"></div>
+      <div class="ticks">
+        <div class="tick" style="left:16.67%"></div><div class="tick" style="left:33.33%"></div>
+        <div class="tick" style="left:50%"></div><div class="tick" style="left:66.67%"></div>
+        <div class="tick" style="left:83.33%"></div>
+      </div>
+    </div>
+    <div class="chips" id="sp-chips">
+      <div class="chip c5" data-p="5"><div class="cp">−5%</div><div class="cl">Pullback</div></div>
+      <div class="chip c10" data-p="10"><div class="cp">−10%</div><div class="cl">Correction</div></div>
+      <div class="chip c15" data-p="15"><div class="cp">−15%</div><div class="cl">Sharp</div></div>
+      <div class="chip c20" data-p="20"><div class="cp">−20%</div><div class="cl">Bear Mkt</div></div>
+      <div class="chip c25" data-p="25"><div class="cp">−25%</div><div class="cl">Severe</div></div>
+      <div class="chip c30" data-p="30"><div class="cp">−30%</div><div class="cl">Crash</div></div>
+    </div>
+  </div>
+
+  <!-- NASDAQ -->
+  <div class="card" id="card-ndx">
+    <div class="card-hdr">
+      <div><div class="idx-name">NASDAQ</div><div class="idx-tick">^IXIC · TECH COMPOSITE</div></div>
+      <div><div class="decline" id="ndx-pct">—</div><div class="decline-sub">from 52-wk peak</div></div>
+    </div>
+    <div class="prow">
+      <div><div class="plbl">52-Wk Peak</div><div class="pval peak-v" id="ndx-peak">—</div></div>
+      <div><div class="plbl">Current</div><div class="pval cur-v" id="ndx-cur">—</div></div>
+      <div><div class="plbl">Pts Lost</div><div class="pval loss-v" id="ndx-loss">—</div></div>
+    </div>
+    <div class="bar-hdr"><span>DRAWDOWN DEPTH</span><span>0 ──────── 30%</span></div>
+    <div class="bar-track">
+      <div class="bar-fill" id="ndx-bar"></div>
+      <div class="ticks">
+        <div class="tick" style="left:16.67%"></div><div class="tick" style="left:33.33%"></div>
+        <div class="tick" style="left:50%"></div><div class="tick" style="left:66.67%"></div>
+        <div class="tick" style="left:83.33%"></div>
+      </div>
+    </div>
+    <div class="chips" id="ndx-chips">
+      <div class="chip c5" data-p="5"><div class="cp">−5%</div><div class="cl">Pullback</div></div>
+      <div class="chip c10" data-p="10"><div class="cp">−10%</div><div class="cl">Correction</div></div>
+      <div class="chip c15" data-p="15"><div class="cp">−15%</div><div class="cl">Sharp</div></div>
+      <div class="chip c20" data-p="20"><div class="cp">−20%</div><div class="cl">Bear Mkt</div></div>
+      <div class="chip c25" data-p="25"><div class="cp">−25%</div><div class="cl">Severe</div></div>
+      <div class="chip c30" data-p="30"><div class="cp">−30%</div><div class="cl">Crash</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ALERT THRESHOLDS -->
+<div id="alerts">
+  <div class="ptitle" onclick="toggleAlerts()">
+    Alert Thresholds
+    <span id="alerts-chevron">▲</span>
+  </div>
+  <div id="alerts-body">
+    <div id="alert-rows"></div>
+  </div>
+</div>
+
+<!-- INDICATOR CARDS -->
+<div class="section-label">Market Indicators</div>
+<div class="grid-5">
+
+  <!-- GOLD -->
+  <div class="ind-card" id="card-gold" style="--card-accent:var(--gold-color);">
+    <div class="ind-name">Gold</div>
+    <div class="ind-tick">GC=F · NYMEX SPOT</div>
+    <div class="ind-big" id="gold-price" style="color:var(--gold-color);">—</div>
+    <div class="ind-chg" id="gold-chg">Loading…</div>
+  </div>
+
+  <!-- DXY -->
+  <div class="ind-card" id="card-dxy" style="--card-accent:var(--purple);">
+    <div class="ind-name">DXY</div>
+    <div class="ind-tick">DX-Y.NYB · USD INDEX</div>
+    <div class="ind-big" id="dxy-price" style="color:var(--purple);">—</div>
+    <div class="ind-chg" id="dxy-chg">Loading…</div>
+    <div class="dxy-chart-wrap">
+      <div class="dxy-chart-hdr"><span>6-MONTH CHART</span><span id="dxy-range">—</span></div>
+      <svg id="dxy-svg" width="100%" height="70" viewBox="0 0 200 70" preserveAspectRatio="none" style="display:block;overflow:visible;">
+        <defs>
+          <linearGradient id="dxy-grad" x1="0" y1="0" x2="0" y2="1">
+            <stop id="dxy-grad-stop" offset="0%" stop-color="var(--purple)" stop-opacity="0.3"/>
+            <stop offset="100%" stop-color="var(--purple)" stop-opacity="0"/>
+          </linearGradient>
+        </defs>
+        <path id="dxy-area" fill="url(#dxy-grad)" d=""/>
+        <path id="dxy-line" fill="none" stroke="var(--purple)" stroke-width="1.5" stroke-linejoin="round" d=""/>
+        <circle id="dxy-dot" r="3" fill="var(--purple)" stroke="var(--bg2)" stroke-width="1.5" cx="-99" cy="-99"/>
+      </svg>
+      <div class="dxy-dates">
+        <span id="dxy-d1">—</span>
+        <span id="dxy-d2">Today</span>
+      </div>
+    </div>
+    <div class="ind-row2" style="margin-top:8px;">
+      <div><div class="plbl">6-Mo Low</div><div class="pval" style="color:var(--green);font-size:12px;" id="dxy-lo">—</div></div>
+      <div><div class="plbl">6-Mo High</div><div class="pval" style="color:var(--purple);font-size:12px;" id="dxy-hi">—</div></div>
+    </div>
+  </div>
+
+  <!-- DOW JONES -->
+  <div class="ind-card" id="card-dji" style="--card-accent:var(--blue);">
+    <div class="ind-name">Dow Jones</div>
+    <div class="ind-tick">^DJI · BLUE CHIP 30</div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
+      <div style="font-size:9px;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;padding-top:6px;">from 52-wk peak</div>
+      <div class="decline" id="dji-pct" style="font-size:26px;">—</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:8px;background:var(--bg3);border:1px solid var(--border);margin-bottom:10px;">
+      <div><div class="plbl">Peak</div><div class="pval peak-v" style="font-size:11px;" id="dji-peak">—</div></div>
+      <div><div class="plbl">Current</div><div class="pval cur-v" style="font-size:11px;" id="dji-cur">—</div></div>
+      <div><div class="plbl">Lost</div><div class="pval loss-v" style="font-size:11px;" id="dji-loss">—</div></div>
+    </div>
+    <div class="mbar-hdr"><span>DRAWDOWN</span><span>0 ── 30%</span></div>
+    <div class="mbar-track">
+      <div class="mbar-fill" id="dji-bar"></div>
+      <div class="mticks">
+        <div class="mtick" style="left:16.67%"></div><div class="mtick" style="left:33.33%"></div>
+        <div class="mtick" style="left:50%"></div><div class="mtick" style="left:66.67%"></div>
+        <div class="mtick" style="left:83.33%"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIX -->
+  <div class="ind-card" id="card-vix" style="--card-accent:var(--vix-calm);">
+    <div class="ind-name">VIX</div>
+    <div class="ind-tick">^VIX · CBOE VOLATILITY</div>
+    <div class="ind-big" id="vix-val">—</div>
+    <div class="ind-chg" id="vix-lbl">Loading…</div>
+    <div class="ind-row2">
+      <div><div class="plbl">52-Wk Low</div><div class="pval" style="color:var(--green);font-size:12px;" id="vix-lo">—</div></div>
+      <div><div class="plbl">52-Wk High</div><div class="pval" style="color:var(--red);font-size:12px;" id="vix-hi">—</div></div>
+    </div>
+    <div class="mbar-hdr"><span>FEAR LEVEL</span><span>0 ──── 60</span></div>
+    <div class="mbar-track"><div class="mbar-fill" id="vix-bar"></div></div>
+    <div class="vzones">
+      <div class="vzone" id="vz-calm" style="--ztc:var(--vix-calm);"><div class="vz-v">&lt;20</div><div class="vz-l">Calm</div></div>
+      <div class="vzone" id="vz-elev" style="--ztc:var(--vix-elev);"><div class="vz-v">20–30</div><div class="vz-l">Elev</div></div>
+      <div class="vzone" id="vz-fear" style="--ztc:var(--vix-fear);"><div class="vz-v">30–40</div><div class="vz-l">Fear</div></div>
+      <div class="vzone" id="vz-panic" style="--ztc:var(--vix-panic);"><div class="vz-v">40+</div><div class="vz-l">Panic</div></div>
+    </div>
+  </div>
+
+  <!-- WTI CRUDE -->
+  <div class="ind-card" id="card-wti" style="--card-accent:var(--cyan);">
+    <div class="ind-name">WTI Crude</div>
+    <div class="ind-tick">CL=F · NYMEX</div>
+    <div class="ind-big" id="wti-val" style="color:var(--cyan);">—</div>
+    <div class="ind-chg" id="wti-chg">Loading…</div>
+    <div class="ind-row3">
+      <div><div class="plbl">52-Wk Low</div><div class="pval" style="color:var(--green);font-size:11px;" id="wti-lo">—</div></div>
+      <div><div class="plbl">Current</div><div class="pval" style="color:var(--cyan);font-size:11px;" id="wti-cur">—</div></div>
+      <div><div class="plbl">52-Wk High</div><div class="pval" style="color:var(--amber);font-size:11px;" id="wti-hi">—</div></div>
+    </div>
+    <div class="mbar-hdr"><span>52-WK RANGE</span><span>LOW → HIGH</span></div>
+    <div class="mbar-track"><div class="mbar-fill" id="wti-bar"></div></div>
+  </div>
+
+</div>
+
+<div class="foot">
+  Drawdown = (52-wk high − current) / 52-wk high. Data via Yahoo Finance (~15 min delay during market hours).
+  Auto-refreshes every 60s market open, 5 min when closed. Not financial advice.
+</div>
+</div><!-- /wrap -->
+
 <script>
-/* ═══ CONFIG ═══════════════════════════════════ */
+// ═══════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════
 const REFRESH_OPEN   = 60;
 const REFRESH_CLOSED = 300;
 
 const THRESHOLDS = [
-  {pct:5,  icon:'⚠️', desc:'Minor pullback territory'},
-  {pct:10, icon:'🔶', desc:'Official market correction'},
-  {pct:15, icon:'🔻', desc:'Significant technical damage'},
-  {pct:20, icon:'🐻', desc:'Official bear market threshold'},
-  {pct:25, icon:'🚨', desc:'Severe bear market territory'},
-  {pct:30, icon:'💀', desc:'Extreme crash / panic territory'},
-];
-const TC={5:'var(--c5)',10:'var(--c10)',15:'var(--c15)',20:'var(--c20)',25:'var(--c25)',30:'var(--c30)'};
-
-const PROXIES=[
-  u=>`https://corsproxy.io/?${encodeURIComponent(u)}`,
-  u=>`https://api.allorigins.win/raw?url=${encodeURIComponent(u)}`,
-  u=>`https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(u)}`,
-  u=>`https://thingproxy.freeboard.io/fetch/${u}`,
-  u=>`https://cors-anywhere.herokuapp.com/${u}`,
+  { pct: 5,  icon: '⚠️', desc: 'Minor pullback territory'       },
+  { pct: 10, icon: '🔶', desc: 'Official market correction'      },
+  { pct: 15, icon: '🔻', desc: 'Significant technical damage'    },
+  { pct: 20, icon: '🐻', desc: 'Official bear market threshold'  },
+  { pct: 25, icon: '🚨', desc: 'Severe bear market territory'    },
+  { pct: 30, icon: '💀', desc: 'Extreme crash / panic territory' },
 ];
 
-/* ═══ STATE ════════════════════════════════════ */
-let spData=null,ndxData=null,goldData=null,dxyData=null,djiData=null,vixData=null,wtiData=null;
-let paused=false,cdSec=REFRESH_OPEN,cdTimer=null,rfTimer=null;
+const TC = {
+  5:  'var(--c5)',
+  10: 'var(--c10)',
+  15: 'var(--c15)',
+  20: 'var(--c20)',
+  25: 'var(--c25)',
+  30: 'var(--c30)',
+};
 
-/* ═══ UTILS ════════════════════════════════════ */
-const fmt  = n=>n.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-const fmt1  = n=>n.toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});
-const dd   = (cur,pk)=>pk>0?Math.max(0,(pk-cur)/pk*100):0;
-const rng  = (cur,lo,hi)=>hi>lo?Math.max(0,Math.min(100,(cur-lo)/(hi-lo)*100)):50;
+// CORS proxies — tried in order until one works
+const PROXIES = [
+  u => 'https://corsproxy.io/?' + encodeURIComponent(u),
+  u => 'https://api.allorigins.win/raw?url=' + encodeURIComponent(u),
+  u => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(u),
+  u => 'https://proxy.cors.sh/' + u,
+  u => 'https://cors-anywhere.herokuapp.com/' + u,
+];
 
-function isOpen(){
-  const et=new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));
-  const d=et.getDay(),m=et.getHours()*60+et.getMinutes();
-  return d>=1&&d<=5&&m>=570&&m<960;
+// ═══════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════
+var spData   = null;
+var ndxData  = null;
+var goldData = null;
+var dxyData  = null;
+var djiData  = null;
+var vixData  = null;
+var wtiData  = null;
+
+var paused   = false;
+var cdSec    = REFRESH_OPEN;
+var cdTimer  = null;
+var rfTimer  = null;
+
+// ═══════════════════════════════════════════════════
+// HELPERS
+// ═══════════════════════════════════════════════════
+function fmt(n) {
+  return Number(n).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
-function declineColor(d){
-  for(let i=THRESHOLDS.length-1;i>=0;i--) if(d>=THRESHOLDS[i].pct) return TC[THRESHOLDS[i].pct];
+
+function fmt1(n) {
+  return Number(n).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+}
+
+function drawdown(cur, peak) {
+  if (!peak || peak <= 0) return 0;
+  return Math.max(0, (peak - cur) / peak * 100);
+}
+
+function rangePct(cur, lo, hi) {
+  if (hi <= lo) return 50;
+  return Math.max(0, Math.min(100, (cur - lo) / (hi - lo) * 100));
+}
+
+function ddColor(d) {
+  if (d >= 30) return 'var(--c30)';
+  if (d >= 25) return 'var(--c25)';
+  if (d >= 20) return 'var(--c20)';
+  if (d >= 15) return 'var(--c15)';
+  if (d >= 10) return 'var(--c10)';
+  if (d >= 5)  return 'var(--c5)';
   return 'var(--green)';
 }
-function vixColor(v){ return v>=40?'var(--vix-panic)':v>=30?'var(--vix-fear)':v>=20?'var(--vix-elevated)':'var(--vix-calm)'; }
-function vixLabel(v){ return v>=40?'PANIC':v>=30?'HIGH FEAR':v>=20?'ELEVATED':'CALM'; }
 
-/* ═══ FETCH ════════════════════════════════════ */
-async function fetchWithTimeout(url,ms=9000){
-  const ctrl=new AbortController();
-  const tid=setTimeout(()=>ctrl.abort(),ms);
-  try{ const r=await fetch(url,{signal:ctrl.signal}); clearTimeout(tid); return r; }
-  catch(e){ clearTimeout(tid); throw e; }
+function ddBarGrad(d) {
+  if (d <= 0)  return 'var(--green)';
+  if (d < 5)   return 'linear-gradient(90deg,var(--green),var(--c5))';
+  if (d < 10)  return 'linear-gradient(90deg,var(--c5),var(--c10))';
+  if (d < 15)  return 'linear-gradient(90deg,var(--c10),var(--c15))';
+  if (d < 20)  return 'linear-gradient(90deg,var(--c15),var(--c20))';
+  if (d < 25)  return 'linear-gradient(90deg,var(--c20),var(--c25))';
+  return 'linear-gradient(90deg,var(--c25),var(--c30))';
 }
-async function fetchYahoo(sym){
-  const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=1y&includePrePost=false`;
-  const errors=[];
-  for(const mk of PROXIES){
-    try{
-      const r=await fetchWithTimeout(mk(url),12000);
-      if(!r.ok) throw new Error(`HTTP ${r.status}`);
-      const j=await r.json();
-      const meta=j?.chart?.result?.[0]?.meta;
-      if(!meta) throw new Error('No meta');
-      const current=meta.regularMarketPrice||meta.chartPreviousClose;
-      const peak=meta.fiftyTwoWeekHigh||meta.regularMarketDayHigh;
-      const low52=meta.fiftyTwoWeekLow||meta.regularMarketDayLow;
-      const prevClose=meta.chartPreviousClose||meta.regularMarketPreviousClose;
-      if(!current) throw new Error('Missing price');
-      return {current,peak:peak||current,low52:low52||current,prevClose:prevClose||current};
-    }catch(e){errors.push(e.message);}
+
+function vixColor(v) {
+  if (v >= 40) return 'var(--vix-panic)';
+  if (v >= 30) return 'var(--vix-fear)';
+  if (v >= 20) return 'var(--vix-elev)';
+  return 'var(--vix-calm)';
+}
+
+function vixLabel(v) {
+  if (v >= 40) return 'PANIC';
+  if (v >= 30) return 'HIGH FEAR';
+  if (v >= 20) return 'ELEVATED';
+  return 'CALM';
+}
+
+function isMarketOpen() {
+  var et = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  var d  = et.getDay();
+  var m  = et.getHours() * 60 + et.getMinutes();
+  return d >= 1 && d <= 5 && m >= 570 && m < 960;
+}
+
+// ═══════════════════════════════════════════════════
+// FETCH
+// ═══════════════════════════════════════════════════
+function fetchWithTimeout(url, ms) {
+  ms = ms || 10000;
+  var ctrl = new AbortController();
+  var tid  = setTimeout(function() { ctrl.abort(); }, ms);
+  return fetch(url, { signal: ctrl.signal })
+    .then(function(r) { clearTimeout(tid); return r; })
+    .catch(function(e) { clearTimeout(tid); throw e; });
+}
+
+function fetchYahoo(sym) {
+  var base = 'https://query1.finance.yahoo.com/v8/finance/chart/'
+    + encodeURIComponent(sym)
+    + '?interval=1d&range=1y&includePrePost=false';
+
+  var i = 0;
+  var errors = [];
+
+  function tryNext() {
+    if (i >= PROXIES.length) {
+      return Promise.reject(new Error('All proxies failed for ' + sym + ': ' + errors.join(' | ')));
+    }
+    var url = PROXIES[i++](base);
+    return fetchWithTimeout(url, 10000)
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function(j) {
+        var meta = j && j.chart && j.chart.result && j.chart.result[0] && j.chart.result[0].meta;
+        if (!meta) throw new Error('No meta in response');
+        var current   = meta.regularMarketPrice || meta.chartPreviousClose;
+        var peak      = meta.fiftyTwoWeekHigh   || meta.regularMarketDayHigh;
+        var low52     = meta.fiftyTwoWeekLow    || meta.regularMarketDayLow;
+        var prevClose = meta.chartPreviousClose  || meta.regularMarketPreviousClose;
+        if (!current) throw new Error('Missing price field');
+        return {
+          current:   current,
+          peak:      peak      || current,
+          low52:     low52     || current,
+          prevClose: prevClose || current
+        };
+      })
+      .catch(function(e) {
+        errors.push(e.message);
+        return tryNext();
+      });
   }
-  throw new Error(`All proxies failed for ${sym}: ${errors.join(' | ')}`);
+  return tryNext();
 }
 
-async function fetchYahooHistory(sym, range='6mo', interval='1d'){
-  const url=`https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(sym)}?interval=${interval}&range=${range}&includePrePost=false`;
-  const errors=[];
-  for(const mk of PROXIES){
-    try{
-      const r=await fetchWithTimeout(mk(url),12000);
-      if(!r.ok) throw new Error(`HTTP ${r.status}`);
-      const j=await r.json();
-      const result=j?.chart?.result?.[0];
-      if(!result) throw new Error('No result');
-      const meta=result.meta;
-      const timestamps=result.timestamp||[];
-      const closes=result.indicators?.quote?.[0]?.close||[];
-      const current=meta.regularMarketPrice||meta.chartPreviousClose;
-      const prevClose=meta.chartPreviousClose||meta.regularMarketPreviousClose;
-      const points=timestamps.map((t,i)=>({t,c:closes[i]})).filter(p=>p.c!=null);
-      return {current,prevClose:prevClose||current,points};
-    }catch(e){errors.push(e.message);}
+function fetchYahooHistory(sym) {
+  var base = 'https://query1.finance.yahoo.com/v8/finance/chart/'
+    + encodeURIComponent(sym)
+    + '?interval=1d&range=6mo&includePrePost=false';
+
+  var i = 0;
+  var errors = [];
+
+  function tryNext() {
+    if (i >= PROXIES.length) {
+      return Promise.reject(new Error('History failed for ' + sym + ': ' + errors.join(' | ')));
+    }
+    var url = PROXIES[i++](base);
+    return fetchWithTimeout(url, 10000)
+      .then(function(r) {
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return r.json();
+      })
+      .then(function(j) {
+        var result = j && j.chart && j.chart.result && j.chart.result[0];
+        if (!result) throw new Error('No result');
+        var meta      = result.meta;
+        var stamps    = result.timestamp || [];
+        var closes    = (result.indicators && result.indicators.quote && result.indicators.quote[0] && result.indicators.quote[0].close) || [];
+        var current   = meta.regularMarketPrice || meta.chartPreviousClose;
+        var prevClose = meta.chartPreviousClose  || meta.regularMarketPreviousClose;
+        var points    = [];
+        for (var k = 0; k < stamps.length; k++) {
+          if (closes[k] != null) points.push({ t: stamps[k], c: closes[k] });
+        }
+        return { current: current, prevClose: prevClose || current, points: points };
+      })
+      .catch(function(e) {
+        errors.push(e.message);
+        return tryNext();
+      });
   }
-  throw new Error(`History failed for ${sym}: ${errors.join(' | ')}`);
+  return tryNext();
 }
 
-async function fetchAll(manual=false){
-  document.getElementById('rfsh-btn').disabled=true;
+// ═══════════════════════════════════════════════════
+// FETCH ALL
+// ═══════════════════════════════════════════════════
+function fetchAll(manual) {
+  if (paused && !manual) return;
+  document.getElementById('rfsh-btn').disabled = true;
   document.getElementById('err-box').classList.remove('show');
-  try{
-    const [sp,ndx,gold,dji,vix,wti,dxy]=await Promise.all([
-      fetchYahoo('^GSPC'), fetchYahoo('^IXIC'),
-      fetchYahoo('GC=F'),  fetchYahoo('^DJI'),
-      fetchYahoo('^VIX'),  fetchYahoo('CL=F'),
-      fetchYahooHistory('DX-Y.NYB','6mo','1d'),
-    ]);
-    spData=sp; ndxData=ndx; goldData=gold; djiData=dji; vixData=vix; wtiData=wti; dxyData=dxy;
+
+  Promise.all([
+    fetchYahoo('^GSPC'),
+    fetchYahoo('^IXIC'),
+    fetchYahoo('GC=F'),
+    fetchYahooHistory('DX-Y.NYB'),
+    fetchYahoo('^DJI'),
+    fetchYahoo('^VIX'),
+    fetchYahoo('CL=F'),
+  ])
+  .then(function(results) {
+    spData   = results[0];
+    ndxData  = results[1];
+    goldData = results[2];
+    dxyData  = results[3];
+    djiData  = results[4];
+    vixData  = results[5];
+    wtiData  = results[6];
     renderAll();
-    document.getElementById('ts').textContent=
-      'Updated '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    document.getElementById('ldot').className='ldot';
-  }catch(e){
-    const b=document.getElementById('err-box');
-    b.textContent='⚠ Data fetch failed: '+e.message+'. Retrying automatically.';
-    b.classList.add('show');
-    document.getElementById('ldot').className='ldot err';
-  }finally{
-    document.getElementById('rfsh-btn').disabled=false;
+    var now = new Date();
+    document.getElementById('ts').textContent = 'Updated ' +
+      now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    document.getElementById('ldot').className = 'ldot';
+  })
+  .catch(function(e) {
+    var box = document.getElementById('err-box');
+    box.textContent = '⚠ ' + e.message;
+    box.classList.add('show');
+    document.getElementById('ldot').className = 'ldot err';
+  })
+  .finally(function() {
+    document.getElementById('rfsh-btn').disabled = false;
     scheduleNext();
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// SCHEDULE / COUNTDOWN
+// ═══════════════════════════════════════════════════
+function scheduleNext() {
+  clearTimeout(rfTimer);
+  clearInterval(cdTimer);
+  if (paused) return;
+
+  var open     = isMarketOpen();
+  var interval = open ? REFRESH_OPEN : REFRESH_CLOSED;
+  cdSec        = interval;
+  updateCountdown(interval);
+
+  cdTimer = setInterval(function() {
+    cdSec--;
+    updateCountdown(interval);
+    if (cdSec <= 0) clearInterval(cdTimer);
+  }, 1000);
+
+  rfTimer = setTimeout(function() { fetchAll(false); }, interval * 1000);
+
+  var badge = document.getElementById('mkt-badge');
+  if (open) { badge.textContent = 'MARKET OPEN';   badge.className = 'mkt-badge open'; }
+  else       { badge.textContent = 'MARKET CLOSED'; badge.className = 'mkt-badge closed'; }
+
+  document.getElementById('live-lbl').textContent = open
+    ? 'LIVE · AUTO-REFRESH ' + REFRESH_OPEN + 's'
+    : 'AUTO-REFRESH ' + (REFRESH_CLOSED / 60) + 'm (CLOSED)';
+}
+
+function updateCountdown(total) {
+  var pct = Math.max(0, cdSec / total * 100);
+  document.getElementById('cd-fill').style.width = pct + '%';
+  document.getElementById('cd-txt').textContent  = cdSec >= 60 ? Math.ceil(cdSec / 60) + 'm' : cdSec + 's';
+}
+
+// ═══════════════════════════════════════════════════
+// PAUSE
+// ═══════════════════════════════════════════════════
+function togglePause() {
+  paused = !paused;
+  var btn = document.getElementById('pause-btn');
+  if (paused) {
+    btn.textContent = '▶ Resume';
+    clearTimeout(rfTimer);
+    clearInterval(cdTimer);
+    document.getElementById('ldot').className    = 'ldot paused';
+    document.getElementById('live-lbl').textContent = 'PAUSED';
+  } else {
+    btn.textContent = '⏸ Pause';
+    fetchAll(true);
   }
 }
 
-/* ═══ SCHEDULE ═════════════════════════════════ */
-function scheduleNext(){
-  clearTimeout(rfTimer); clearInterval(cdTimer);
-  if(paused) return;
-  const open=isOpen(),interval=open?REFRESH_OPEN:REFRESH_CLOSED;
-  cdSec=interval; updateCd(interval);
-  cdTimer=setInterval(()=>{cdSec--;updateCd(interval);if(cdSec<=0)clearInterval(cdTimer);},1000);
-  rfTimer=setTimeout(()=>fetchAll(),interval*1000);
-  const badge=document.getElementById('mkt-badge');
-  badge.textContent=open?'MARKET OPEN':'MARKET CLOSED';
-  badge.className='mkt-badge '+(open?'open':'closed');
-  document.getElementById('live-lbl').textContent=open
-    ?`LIVE · AUTO-REFRESH ${REFRESH_OPEN}s`:`AUTO-REFRESH ${REFRESH_CLOSED/60}m (CLOSED)`;
-}
-function updateCd(total){
-  document.getElementById('cd-fill').style.width=Math.max(0,cdSec/total*100)+'%';
-  document.getElementById('cd-txt').textContent=cdSec>=60?Math.ceil(cdSec/60)+'m':cdSec+'s';
-}
-
-/* ═══ PAUSE ════════════════════════════════════ */
-function togglePause(){
-  paused=!paused;
-  const btn=document.getElementById('pause-btn');
-  if(paused){
-    btn.textContent='▶ Resume'; clearTimeout(rfTimer); clearInterval(cdTimer);
-    document.getElementById('ldot').className='ldot paused';
-    document.getElementById('live-lbl').textContent='PAUSED';
-  }else{ btn.textContent='⏸ Pause'; fetchAll(); }
-}
-
-/* ═══ COLLAPSE ═════════════════════════════════ */
-function toggleAlerts(){
-  const body=document.getElementById('alerts-body');
-  const chev=document.getElementById('alerts-chevron');
-  if(!body.classList.contains('collapsed')){
-    body.style.maxHeight=body.scrollHeight+'px';
-    requestAnimationFrame(()=>{body.classList.add('collapsed');chev.classList.add('collapsed');});
-  }else{
-    body.classList.remove('collapsed'); chev.classList.remove('collapsed');
-    body.style.maxHeight=body.scrollHeight+'px';
-    body.addEventListener('transitionend',()=>{body.style.maxHeight='none';},{once:true});
+// ═══════════════════════════════════════════════════
+// COLLAPSE ALERTS
+// ═══════════════════════════════════════════════════
+function toggleAlerts() {
+  var body = document.getElementById('alerts-body');
+  var chev = document.getElementById('alerts-chevron');
+  if (body.classList.contains('collapsed')) {
+    body.classList.remove('collapsed');
+    chev.classList.remove('collapsed');
+    body.style.maxHeight = body.scrollHeight + 'px';
+    body.addEventListener('transitionend', function handler() {
+      body.style.maxHeight = 'none';
+      body.removeEventListener('transitionend', handler);
+    });
+  } else {
+    body.style.maxHeight = body.scrollHeight + 'px';
+    requestAnimationFrame(function() {
+      body.classList.add('collapsed');
+      chev.classList.add('collapsed');
+    });
   }
 }
 
-/* ═══ RENDER ═══════════════════════════════════ */
-function renderAll(){
-  if(!spData||!ndxData||!goldData||!dxyData||!djiData||!vixData||!wtiData) return;
-  renderDrawdown('sp',  spData,  'card-sp',  'sp-chips');
-  renderDrawdown('ndx', ndxData, 'card-ndx', 'ndx-chips');
+// ═══════════════════════════════════════════════════
+// RENDER ALL
+// ═══════════════════════════════════════════════════
+function renderAll() {
+  if (!spData || !ndxData || !goldData || !dxyData || !djiData || !vixData || !wtiData) return;
+  renderDrawdown('sp',  spData,  'card-sp',  'sp-pct',  'sp-peak',  'sp-cur',  'sp-loss',  'sp-bar',  'sp-chips');
+  renderDrawdown('ndx', ndxData, 'card-ndx', 'ndx-pct', 'ndx-peak', 'ndx-cur', 'ndx-loss', 'ndx-bar', 'ndx-chips');
   renderGold();
   renderDxy();
   renderDji();
@@ -562,208 +713,257 @@ function renderAll(){
   renderAlerts();
 }
 
-function renderDrawdown(pfx,data,cardId,chipsId){
-  const d=dd(data.current,data.peak);
-  const color=declineColor(d);
-  document.getElementById(pfx+'-d').textContent=(d>0?'−':'')+d.toFixed(2)+'%';
-  document.getElementById(pfx+'-d').style.color=color;
-  document.getElementById(pfx+'-pk').textContent=fmt(data.peak);
-  document.getElementById(pfx+'-c').textContent=fmt(data.current);
-  document.getElementById(pfx+'-l').textContent='−'+fmt(Math.max(0,data.peak-data.current));
-  document.getElementById(cardId).style.setProperty('--card-accent',color);
-  const bar=document.getElementById(pfx+'-bar');
-  bar.style.width=Math.min(100,d/30*100)+'%';
-  if(d<=0)      bar.style.background='var(--green)';
-  else if(d<5)  bar.style.background='linear-gradient(90deg,var(--green),var(--c5))';
-  else if(d<10) bar.style.background='linear-gradient(90deg,var(--c5),var(--c10))';
-  else if(d<15) bar.style.background='linear-gradient(90deg,var(--c10),var(--c15))';
-  else if(d<20) bar.style.background='linear-gradient(90deg,var(--c15),var(--c20))';
-  else if(d<25) bar.style.background='linear-gradient(90deg,var(--c20),var(--c25))';
-  else          bar.style.background='linear-gradient(90deg,var(--c25),var(--c30))';
-  const topHit=THRESHOLDS.filter(t=>d>=t.pct).slice(-1)[0]?.pct;
-  document.getElementById(chipsId).querySelectorAll('.chip').forEach(el=>{
-    const p=+el.dataset.p; el.classList.remove('hit','active');
-    if(d>=p){el.classList.add('hit');if(p===topHit)el.classList.add('active');}
-  });
+// ═══════════════════════════════════════════════════
+// RENDER DRAWDOWN CARD
+// ═══════════════════════════════════════════════════
+function renderDrawdown(pfx, data, cardId, pctId, peakId, curId, lossId, barId, chipsId) {
+  var d     = drawdown(data.current, data.peak);
+  var color = ddColor(d);
+
+  document.getElementById(pctId).textContent = (d > 0 ? '−' : '') + d.toFixed(2) + '%';
+  document.getElementById(pctId).style.color  = color;
+  document.getElementById(peakId).textContent = fmt(data.peak);
+  document.getElementById(curId).textContent  = fmt(data.current);
+  document.getElementById(lossId).textContent = '−' + fmt(Math.max(0, data.peak - data.current));
+  document.getElementById(cardId).style.setProperty('--card-accent', color);
+
+  var bar = document.getElementById(barId);
+  bar.style.width      = Math.min(100, d / 30 * 100) + '%';
+  bar.style.background = ddBarGrad(d);
+
+  var topHit = null;
+  for (var t = 0; t < THRESHOLDS.length; t++) {
+    if (d >= THRESHOLDS[t].pct) topHit = THRESHOLDS[t].pct;
+  }
+
+  var chips = document.getElementById(chipsId).querySelectorAll('.chip');
+  for (var c = 0; c < chips.length; c++) {
+    var p = parseInt(chips[c].getAttribute('data-p'), 10);
+    chips[c].classList.remove('hit', 'active-chip');
+    if (d >= p) {
+      chips[c].classList.add('hit');
+      if (p === topHit) chips[c].classList.add('active-chip');
+    }
+  }
 }
 
-function renderIndicatorBar(barId,cur,lo,hi,gradient){
-  const p=rng(cur,lo,hi);
-  const bar=document.getElementById(barId);
-  bar.style.width=p+'%';
-  bar.style.background=gradient;
+// ═══════════════════════════════════════════════════
+// RENDER GOLD
+// ═══════════════════════════════════════════════════
+function renderGold() {
+  var v    = goldData.current;
+  var chg  = v - goldData.prevClose;
+  var pchg = goldData.prevClose > 0 ? (chg / goldData.prevClose * 100) : 0;
+  var sign = chg >= 0 ? '+' : '';
+  var col  = chg >= 0 ? 'var(--green)' : 'var(--red)';
+
+  document.getElementById('gold-price').textContent = '$' + fmt(v);
+  var el = document.getElementById('gold-chg');
+  el.textContent = sign + '$' + fmt(Math.abs(chg)) + ' (' + sign + pchg.toFixed(2) + '%) TODAY';
+  el.style.color = col;
 }
 
-function renderDxy(){
-  const {current, prevClose, points} = dxyData;
-  const chg=current-prevClose, chgPct=prevClose>0?(chg/prevClose*100):0;
-  const sign=chg>=0?'+':'';
-  const color=chg>=0?'var(--green)':'var(--red)';
+// ═══════════════════════════════════════════════════
+// RENDER DXY
+// ═══════════════════════════════════════════════════
+function renderDxy() {
+  var current   = dxyData.current;
+  var prevClose = dxyData.prevClose;
+  var points    = dxyData.points;
+  var chg       = current - prevClose;
+  var pchg      = prevClose > 0 ? (chg / prevClose * 100) : 0;
+  var sign      = chg >= 0 ? '+' : '';
+  var lineColor = chg >= 0 ? 'var(--green)' : 'var(--red)';
 
-  document.getElementById('dxy-val').textContent=current.toFixed(2);
-  const chgEl=document.getElementById('dxy-chg');
-  chgEl.textContent=`${sign}${Math.abs(chg).toFixed(2)} (${sign}${chgPct.toFixed(2)}%) TODAY`;
-  chgEl.style.color=color;
+  document.getElementById('dxy-price').textContent = current.toFixed(2);
+  var chgEl = document.getElementById('dxy-chg');
+  chgEl.textContent = sign + Math.abs(chg).toFixed(2) + ' (' + sign + pchg.toFixed(2) + '%) TODAY';
+  chgEl.style.color = lineColor;
+  document.getElementById('card-dxy').style.setProperty('--card-accent', lineColor);
 
-  if(!points.length) return;
+  if (!points || points.length < 2) return;
 
-  const closes=points.map(p=>p.c);
-  const lo=Math.min(...closes), hi=Math.max(...closes);
-  const pad=2, W=220, H=80;
+  var closes = points.map(function(p) { return p.c; });
+  var lo = Math.min.apply(null, closes);
+  var hi = Math.max.apply(null, closes);
+  var n  = closes.length;
+  var W  = 200, H = 70, pad = 2;
 
-  document.getElementById('dxy-lo').textContent=lo.toFixed(2);
-  document.getElementById('dxy-hi').textContent=hi.toFixed(2);
-  document.getElementById('dxy-range-lbl').textContent=`${lo.toFixed(1)} – ${hi.toFixed(1)}`;
+  document.getElementById('dxy-lo').textContent = lo.toFixed(2);
+  document.getElementById('dxy-hi').textContent = hi.toFixed(2);
+  document.getElementById('dxy-range').textContent = lo.toFixed(1) + ' – ' + hi.toFixed(1);
 
-  // Date labels
-  const startDate=new Date(points[0].t*1000);
-  const endDate=new Date(points[points.length-1].t*1000);
-  const fmtDate=d=>d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
-  document.getElementById('dxy-date-start').textContent=fmtDate(startDate);
-  document.getElementById('dxy-date-end').textContent=fmtDate(endDate);
+  var fmtDate = function(ts) {
+    return new Date(ts * 1000).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+  document.getElementById('dxy-d1').textContent = fmtDate(points[0].t);
+  document.getElementById('dxy-d2').textContent = fmtDate(points[n - 1].t);
 
-  // Build SVG path points
-  const n=closes.length;
-  const xs=closes.map((_,i)=>pad+(i/(n-1))*(W-pad*2));
-  const ys=closes.map(c=>pad+(1-(c-lo)/(hi-lo||1))*(H-pad*2));
+  var xs = [], ys = [];
+  for (var i = 0; i < n; i++) {
+    xs.push(pad + (i / (n - 1)) * (W - pad * 2));
+    ys.push(pad + (1 - (closes[i] - lo) / (hi - lo || 1)) * (H - pad * 2));
+  }
 
-  const linePts=xs.map((x,i)=>`${i===0?'M':'L'}${x.toFixed(1)},${ys[i].toFixed(1)}`).join(' ');
-  const areaPts=linePts+` L${xs[n-1].toFixed(1)},${H} L${xs[0].toFixed(1)},${H} Z`;
+  var lineD = '', areaD = '';
+  for (var j = 0; j < n; j++) {
+    lineD += (j === 0 ? 'M' : 'L') + xs[j].toFixed(1) + ',' + ys[j].toFixed(1) + ' ';
+  }
+  areaD = lineD + 'L' + xs[n-1].toFixed(1) + ',' + H + ' L' + xs[0].toFixed(1) + ',' + H + ' Z';
 
-  document.getElementById('dxy-line').setAttribute('d', linePts);
-  document.getElementById('dxy-area').setAttribute('d', areaPts);
+  document.getElementById('dxy-line').setAttribute('d', lineD);
+  document.getElementById('dxy-line').setAttribute('stroke', lineColor);
+  document.getElementById('dxy-area').setAttribute('d', areaD);
+  document.getElementById('dxy-grad-stop').setAttribute('stop-color', lineColor);
 
-  // End dot
-  const dot=document.getElementById('dxy-dot');
+  var dot = document.getElementById('dxy-dot');
   dot.setAttribute('cx', xs[n-1].toFixed(1));
   dot.setAttribute('cy', ys[n-1].toFixed(1));
-  dot.style.display='block';
-  dot.setAttribute('fill', chg>=0?'var(--green)':'var(--red)');
-  dot.setAttribute('stroke-width','1.5');
-
-  // Color line based on direction
-  const lineColor=chg>=0?'var(--green)':'var(--red)';
-  document.getElementById('dxy-line').setAttribute('stroke', lineColor);
-  document.getElementById('card-dxy').style.setProperty('--card-accent', lineColor);
-  // update gradient stop color
-  document.querySelector('#dxy-grad stop:first-child').setAttribute('stop-color', lineColor);
+  dot.setAttribute('fill', lineColor);
 }
 
-function renderGold(){
-  const v=goldData.current;
-  const chg=v-goldData.prevClose, chgPct=goldData.prevClose>0?(chg/goldData.prevClose*100):0;
-  const sign=chg>=0?'+':'';
-  document.getElementById('gold-val').textContent='$'+fmt(v);
-  const el=document.getElementById('gold-chg');
-  el.textContent=`${sign}$${fmt(Math.abs(chg))} (${sign}${chgPct.toFixed(2)}%) TODAY`;
-  el.style.color=chg>=0?'var(--green)':'var(--red)';
+// ═══════════════════════════════════════════════════
+// RENDER DOW JONES
+// ═══════════════════════════════════════════════════
+function renderDji() {
+  var d     = drawdown(djiData.current, djiData.peak);
+  var color = ddColor(d);
+
+  document.getElementById('dji-pct').textContent  = (d > 0 ? '−' : '') + d.toFixed(2) + '%';
+  document.getElementById('dji-pct').style.color   = color;
+  document.getElementById('card-dji').style.setProperty('--card-accent', color);
+  document.getElementById('dji-peak').textContent  = fmt(djiData.peak);
+  document.getElementById('dji-cur').textContent   = fmt(djiData.current);
+  document.getElementById('dji-loss').textContent  = '−' + fmt(Math.max(0, djiData.peak - djiData.current));
+
+  var bar = document.getElementById('dji-bar');
+  bar.style.width      = Math.min(100, d / 30 * 100) + '%';
+  bar.style.background = ddBarGrad(d);
 }
 
-function renderDji(){
-  const d=dd(djiData.current,djiData.peak);
-  const color=declineColor(d);
-  document.getElementById('dji-d').textContent=(d>0?'−':'')+d.toFixed(2)+'%';
-  document.getElementById('dji-d').style.color=color;
-  document.getElementById('card-dji').style.setProperty('--card-accent',color);
-  document.getElementById('dji-pk').textContent=fmt(djiData.peak);
-  document.getElementById('dji-c').textContent=fmt(djiData.current);
-  document.getElementById('dji-l').textContent='−'+fmt(Math.max(0,djiData.peak-djiData.current));
-  const bar=document.getElementById('dji-bar');
-  bar.style.width=Math.min(100,d/30*100)+'%';
-  if(d<=0)      bar.style.background='var(--green)';
-  else if(d<5)  bar.style.background='linear-gradient(90deg,var(--green),var(--c5))';
-  else if(d<10) bar.style.background='linear-gradient(90deg,var(--c5),var(--c10))';
-  else if(d<15) bar.style.background='linear-gradient(90deg,var(--c10),var(--c15))';
-  else if(d<20) bar.style.background='linear-gradient(90deg,var(--c15),var(--c20))';
-  else if(d<25) bar.style.background='linear-gradient(90deg,var(--c20),var(--c25))';
-  else          bar.style.background='linear-gradient(90deg,var(--c25),var(--c30))';
-}
+// ═══════════════════════════════════════════════════
+// RENDER VIX
+// ═══════════════════════════════════════════════════
+function renderVix() {
+  var v     = vixData.current;
+  var color = vixColor(v);
 
-function renderVix(){
-  const v=vixData.current;
-  const color=vixColor(v);
-  document.getElementById('vix-val').textContent=fmt1(v);
-  document.getElementById('vix-val').style.color=color;
-  document.getElementById('vix-lbl').textContent=vixLabel(v);
-  document.getElementById('vix-lbl').style.color=color;
-  document.getElementById('card-vix').style.setProperty('--card-accent',color);
-  document.getElementById('vix-lo').textContent=fmt1(vixData.low52);
-  document.getElementById('vix-hi').textContent=fmt1(vixData.peak);
-  const bar=document.getElementById('vix-bar');
-  bar.style.width=Math.min(100,v/60*100)+'%';
-  if(v<20)      bar.style.background='var(--vix-calm)';
-  else if(v<30) bar.style.background='linear-gradient(90deg,var(--vix-calm),var(--vix-elevated))';
-  else if(v<40) bar.style.background='linear-gradient(90deg,var(--vix-elevated),var(--vix-fear))';
-  else          bar.style.background='linear-gradient(90deg,var(--vix-fear),var(--vix-panic))';
-  const zones=[
-    {id:'fz-calm', min:0,  max:20},
-    {id:'fz-elev', min:20, max:30},
-    {id:'fz-fear', min:30, max:40},
-    {id:'fz-panic',min:40, max:999},
+  document.getElementById('vix-val').textContent = fmt1(v);
+  document.getElementById('vix-val').style.color  = color;
+  document.getElementById('vix-lbl').textContent  = vixLabel(v);
+  document.getElementById('vix-lbl').style.color  = color;
+  document.getElementById('card-vix').style.setProperty('--card-accent', color);
+  document.getElementById('vix-lo').textContent   = fmt1(vixData.low52);
+  document.getElementById('vix-hi').textContent   = fmt1(vixData.peak);
+
+  var bar = document.getElementById('vix-bar');
+  bar.style.width = Math.min(100, v / 60 * 100) + '%';
+  if (v < 20)      bar.style.background = 'var(--vix-calm)';
+  else if (v < 30) bar.style.background = 'linear-gradient(90deg,var(--vix-calm),var(--vix-elev))';
+  else if (v < 40) bar.style.background = 'linear-gradient(90deg,var(--vix-elev),var(--vix-fear))';
+  else             bar.style.background = 'linear-gradient(90deg,var(--vix-fear),var(--vix-panic))';
+
+  var zones = [
+    { id: 'vz-calm',  min: 0,  max: 20  },
+    { id: 'vz-elev',  min: 20, max: 30  },
+    { id: 'vz-fear',  min: 30, max: 40  },
+    { id: 'vz-panic', min: 40, max: 9999},
   ];
-  zones.forEach(z=>{
-    const el=document.getElementById(z.id);
-    el.classList.remove('lit','fzone-active');
-    if(v>=z.min){ el.classList.add('lit'); if(v<z.max) el.classList.add('fzone-active'); }
-  });
+  for (var z = 0; z < zones.length; z++) {
+    var el = document.getElementById(zones[z].id);
+    el.classList.remove('lit', 'zone-active');
+    if (v >= zones[z].min) {
+      el.classList.add('lit');
+      if (v < zones[z].max) el.classList.add('zone-active');
+    }
+  }
 }
 
-function renderWti(){
-  const v=wtiData.current, lo=wtiData.low52, hi=wtiData.peak;
-  const chg=v-wtiData.prevClose, chgPct=wtiData.prevClose>0?(chg/wtiData.prevClose*100):0;
-  const sign=chg>=0?'+':'';
-  document.getElementById('wti-val').textContent='$'+fmt(v);
-  const el=document.getElementById('wti-chg');
-  el.textContent=`${sign}${fmt(chg)} (${sign}${chgPct.toFixed(2)}%) TODAY`;
-  el.style.color=chg>=0?'var(--green)':'var(--red)';
-  document.getElementById('wti-lo').textContent='$'+fmt(lo);
-  document.getElementById('wti-c').textContent='$'+fmt(v);
-  document.getElementById('wti-hi').textContent='$'+fmt(hi);
-  renderIndicatorBar('wti-bar',v,lo,hi,'linear-gradient(90deg,var(--green),var(--cyan))');
+// ═══════════════════════════════════════════════════
+// RENDER WTI
+// ═══════════════════════════════════════════════════
+function renderWti() {
+  var v    = wtiData.current;
+  var lo   = wtiData.low52;
+  var hi   = wtiData.peak;
+  var chg  = v - wtiData.prevClose;
+  var pchg = wtiData.prevClose > 0 ? (chg / wtiData.prevClose * 100) : 0;
+  var sign = chg >= 0 ? '+' : '';
+  var col  = chg >= 0 ? 'var(--green)' : 'var(--red)';
+
+  document.getElementById('wti-val').textContent = '$' + fmt(v);
+  var el = document.getElementById('wti-chg');
+  el.textContent = sign + '$' + fmt(Math.abs(chg)) + ' (' + sign + pchg.toFixed(2) + '%) TODAY';
+  el.style.color = col;
+  document.getElementById('wti-lo').textContent  = '$' + fmt(lo);
+  document.getElementById('wti-cur').textContent = '$' + fmt(v);
+  document.getElementById('wti-hi').textContent  = '$' + fmt(hi);
+
+  var bar = document.getElementById('wti-bar');
+  bar.style.width      = rangePct(v, lo, hi) + '%';
+  bar.style.background = 'linear-gradient(90deg,var(--green),var(--cyan))';
 }
 
-function renderAlerts(){
-  const sd=dd(spData.current,spData.peak);
-  const nd=dd(ndxData.current,ndxData.peak);
-  const grid=document.getElementById('alert-rows');
-  grid.innerHTML='';
-  THRESHOLDS.forEach(t=>{
-    const sh=sd>=t.pct, nh=nd>=t.pct, any=sh||nh;
-    const color=TC[t.pct];
-    const row=document.createElement('div');
-    row.className='arow '+(any?'triggered':'');
-    row.style.borderLeftColor=any?color:'';
-    const mkB=(lbl,hit)=>`<span class="badge ${hit?'hit':'ok'}" style="${hit?`color:${color};border-color:${color}`:''}">
-      ${lbl} ${hit?'✓':'—'}</span>`;
-    row.innerHTML=`
-      <span class="aicon">${t.icon}</span>
-      <span class="athr" style="color:${color}">−${t.pct}%</span>
-      <span class="adesc">${t.desc}</span>
-      <div class="bwrap">${mkB('SPX',sh)}${mkB('NDX',nh)}</div>`;
+// ═══════════════════════════════════════════════════
+// RENDER ALERTS
+// ═══════════════════════════════════════════════════
+function renderAlerts() {
+  var sd  = drawdown(spData.current,  spData.peak);
+  var nd  = drawdown(ndxData.current, ndxData.peak);
+  var vv  = vixData.current;
+  var grid = document.getElementById('alert-rows');
+  grid.innerHTML = '';
+
+  for (var t = 0; t < THRESHOLDS.length; t++) {
+    var thresh = THRESHOLDS[t];
+    var sh     = sd >= thresh.pct;
+    var nh     = nd >= thresh.pct;
+    var any    = sh || nh;
+    var color  = TC[thresh.pct];
+
+    var row = document.createElement('div');
+    row.className = 'arow' + (any ? ' triggered' : '');
+    row.style.borderLeftColor = any ? color : '';
+
+    row.innerHTML =
+      '<span class="aicon">' + thresh.icon + '</span>' +
+      '<span class="athr" style="color:' + color + '">−' + thresh.pct + '%</span>' +
+      '<span class="adesc">' + thresh.desc + '</span>' +
+      '<div class="bwrap">' +
+        badge('SPX', sh, color) +
+        badge('NDX', nh, color) +
+      '</div>';
     grid.appendChild(row);
-  });
+  }
+
   // VIX > 20 alert
-  const vv=vixData.current, vixHit=vv>=20, vc=vixColor(vv);
-  const vRow=document.createElement('div');
-  vRow.className='arow '+(vixHit?'triggered':'');
-  vRow.style.borderLeftColor=vixHit?vc:'';
-  vRow.innerHTML=`
-    <span class="aicon">😰</span>
-    <span class="athr" style="color:${vixHit?vc:'var(--text-dim)'}">VIX&gt;20</span>
-    <span class="adesc">Elevated volatility / fear in the market</span>
-    <div class="bwrap">
-      <span class="badge ${vixHit?'hit':'ok'}" style="${vixHit?`color:${vc};border-color:${vc}`:''}">
-        VIX ${vixHit?'✓':'—'} (${fmt1(vv)})
-      </span>
-    </div>`;
+  var vixHit = vv >= 20;
+  var vc     = vixColor(vv);
+  var vRow   = document.createElement('div');
+  vRow.className = 'arow' + (vixHit ? ' triggered' : '');
+  vRow.style.borderLeftColor = vixHit ? vc : '';
+  vRow.innerHTML =
+    '<span class="aicon">😰</span>' +
+    '<span class="athr" style="color:' + (vixHit ? vc : 'var(--text-dim)') + '">VIX&gt;20</span>' +
+    '<span class="adesc">Elevated market volatility / fear</span>' +
+    '<div class="bwrap">' + badge('VIX ' + fmt1(vv), vixHit, vc) + '</div>';
   grid.appendChild(vRow);
 }
 
-/* ═══ BOOT ═════════════════════════════════════ */
-window.addEventListener('load',()=>{
-  document.getElementById('alerts-body').style.maxHeight='none';
+function badge(lbl, hit, color) {
+  if (hit) {
+    return '<span class="badge hit" style="color:' + color + ';border-color:' + color + '">' + lbl + ' ✓</span>';
+  }
+  return '<span class="badge ok">' + lbl + ' —</span>';
+}
+
+// ═══════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════
+window.addEventListener('load', function() {
+  document.getElementById('alerts-body').style.maxHeight = 'none';
+  fetchAll(true);
 });
-fetchAll(true);
 </script>
 </body>
 </html>
