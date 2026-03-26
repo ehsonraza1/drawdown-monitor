@@ -18,7 +18,6 @@
 body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:100vh;overflow-x:hidden;}
 body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(61,139,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(61,139,255,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
 .wrap{position:relative;z-index:1;max-width:1200px;margin:0 auto;padding:28px 24px;}
-
 header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px;gap:16px;flex-wrap:wrap;}
 .logo-line{display:flex;align-items:center;gap:12px;margin-bottom:4px;}
 .logo-dot{width:10px;height:10px;border-radius:50%;background:var(--amber);box-shadow:0 0 12px var(--amber);animation:pulse 2s ease-in-out infinite;}
@@ -33,7 +32,6 @@ h1{font-family:var(--cond);font-size:26px;font-weight:900;letter-spacing:.12em;t
 .btn.blue{color:var(--blue);}
 .btn.blue:hover{border-color:var(--blue);background:rgba(61,139,255,.08);}
 #ts{font-size:10px;color:var(--text-dim);letter-spacing:.1em;}
-
 .sbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:11px;color:var(--text-dim);margin-bottom:20px;padding-bottom:14px;border-bottom:1px solid var(--border);}
 .sep{color:var(--border2);}
 .ldot{width:7px;height:7px;border-radius:50%;background:var(--green);display:inline-block;animation:lpulse 2s ease-in-out infinite;}
@@ -47,14 +45,11 @@ h1{font-family:var(--cond);font-size:26px;font-weight:900;letter-spacing:.12em;t
 #cd-track{width:80px;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
 #cd-fill{height:100%;width:100%;background:var(--amber);border-radius:2px;transition:width 1s linear;}
 #cd-txt{font-size:10px;color:var(--text-dim);min-width:32px;text-align:right;}
-
-.err-box{background:rgba(255,69,96,.08);border:1px solid rgba(255,69,96,.3);padding:14px 18px;color:var(--red);font-size:11px;line-height:1.8;display:none;margin-bottom:18px;word-break:break-word;}
+.err-box{background:rgba(255,69,96,.08);border:1px solid rgba(255,69,96,.3);padding:14px 18px;color:var(--red);font-size:11px;line-height:1.8;display:none;margin-bottom:18px;word-break:break-all;}
 .err-box.show{display:block;}
-
 .section-label{font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
 .section-label::before{content:'';display:inline-block;width:20px;height:1px;background:var(--border2);}
 .section-label::after{content:'';flex:1;height:1px;background:var(--border);}
-
 .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:28px;}
 @media(max-width:680px){.grid-2{grid-template-columns:1fr;}}
 .card{background:var(--bg2);border:1px solid var(--border);padding:22px;position:relative;overflow:hidden;}
@@ -82,7 +77,6 @@ h1{font-family:var(--cond);font-size:26px;font-weight:900;letter-spacing:.12em;t
 .chip.active-chip{animation:throb 1.5s ease-in-out infinite;}
 @keyframes throb{0%,100%{box-shadow:inset 0 0 0 0 transparent;}50%{box-shadow:inset 0 0 8px 0 rgba(255,255,255,.06);}}
 .c5{--tc:var(--c5);}.c10{--tc:var(--c10);}.c15{--tc:var(--c15);}.c20{--tc:var(--c20);}.c25{--tc:var(--c25);}.c30{--tc:var(--c30);}
-
 #alerts{background:var(--bg2);border:1px solid var(--border);padding:18px 22px;margin-bottom:28px;}
 .ptitle{font-family:var(--cond);font-size:12px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none;}
 .ptitle::before{content:'▶';font-size:8px;color:var(--amber);}
@@ -100,7 +94,6 @@ h1{font-family:var(--cond);font-size:26px;font-weight:900;letter-spacing:.12em;t
 .badge.ok{color:var(--text-dim);border-color:var(--border2);}
 .badge.hit{animation:blink 2s step-end infinite;}
 @keyframes blink{0%,100%{opacity:1;}50%{opacity:.35;}}
-
 .grid-5{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:28px;}
 @media(max-width:1100px){.grid-5{grid-template-columns:1fr 1fr 1fr;}}
 @media(max-width:680px){.grid-5{grid-template-columns:1fr 1fr;}}
@@ -133,7 +126,6 @@ h1{font-family:var(--cond);font-size:26px;font-weight:900;letter-spacing:.12em;t
 </head>
 <body>
 <div class="wrap">
-
 <header>
   <div>
     <div class="logo-line"><div class="logo-dot"></div><h1>Market Monitor</h1></div>
@@ -147,28 +139,24 @@ h1{font-family:var(--cond);font-size:26px;font-weight:900;letter-spacing:.12em;t
     <div id="ts">—</div>
   </div>
 </header>
-
 <div class="sbar">
   <span class="ldot" id="ldot"></span>
-  <span id="live-lbl">LIVE · AUTO-REFRESH 5m</span>
+  <span id="live-lbl">LIVE · AUTO-REFRESH 60s</span>
   <span class="sep">|</span>
   <span class="mkt-badge closed" id="mkt-badge">MARKET CLOSED</span>
   <span class="sep">|</span>
-  <span>TWELVEDATA</span>
+  <span>YAHOO FINANCE</span>
   <div id="cd-wrap">
     <div id="cd-track"><div id="cd-fill"></div></div>
     <span id="cd-txt">—</span>
   </div>
 </div>
-
 <div class="err-box" id="err-box"></div>
-
 <div class="section-label">Drawdown Tracker · 52-Wk High as Peak</div>
 <div class="grid-2">
-
   <div class="card" id="card-sp">
     <div class="card-hdr">
-      <div><div class="idx-name">S&amp;P 500</div><div class="idx-tick">SPX · US LARGE CAP</div></div>
+      <div><div class="idx-name">S&amp;P 500</div><div class="idx-tick">^GSPC · US LARGE CAP</div></div>
       <div><div class="decline" id="sp-pct">—</div><div class="decline-sub">from 52-wk peak</div></div>
     </div>
     <div class="prow">
@@ -191,10 +179,9 @@ h1{font-family:var(--cond);font-size:26px;font-weight:900;letter-spacing:.12em;t
       <div class="chip c30" data-p="30"><div class="cp">−30%</div><div class="cl">Crash</div></div>
     </div>
   </div>
-
   <div class="card" id="card-ndx">
     <div class="card-hdr">
-      <div><div class="idx-name">NASDAQ</div><div class="idx-tick">IXIC · TECH COMPOSITE</div></div>
+      <div><div class="idx-name">NASDAQ</div><div class="idx-tick">^IXIC · TECH COMPOSITE</div></div>
       <div><div class="decline" id="ndx-pct">—</div><div class="decline-sub">from 52-wk peak</div></div>
     </div>
     <div class="prow">
@@ -218,23 +205,19 @@ h1{font-family:var(--cond);font-size:26px;font-weight:900;letter-spacing:.12em;t
     </div>
   </div>
 </div>
-
 <div id="alerts">
   <div class="ptitle" onclick="toggleAlerts()">Alert Thresholds<span id="alerts-chevron">▲</span></div>
   <div id="alerts-body"><div id="alert-rows"></div></div>
 </div>
-
 <div class="section-label">Market Indicators</div>
 <div class="grid-5">
-
   <div class="ind-card" id="card-gold" style="--card-accent:var(--gold-color);">
-    <div class="ind-name">Gold</div><div class="ind-tick">XAU/USD · SPOT</div>
+    <div class="ind-name">Gold</div><div class="ind-tick">GC=F · NYMEX SPOT</div>
     <div class="ind-big" id="gold-price" style="color:var(--gold-color);">—</div>
     <div class="ind-chg" id="gold-chg">Loading…</div>
   </div>
-
   <div class="ind-card" id="card-dxy" style="--card-accent:var(--purple);">
-    <div class="ind-name">DXY</div><div class="ind-tick">DXY · USD INDEX</div>
+    <div class="ind-name">DXY</div><div class="ind-tick">DX-Y.NYB · USD INDEX</div>
     <div class="ind-big" id="dxy-price" style="color:var(--purple);">—</div>
     <div class="ind-chg" id="dxy-chg">Loading…</div>
     <div class="dxy-chart-wrap">
@@ -252,9 +235,8 @@ h1{font-family:var(--cond);font-size:26px;font-weight:900;letter-spacing:.12em;t
       <div><div class="plbl">6-Mo High</div><div class="pval" style="color:var(--purple);font-size:12px;" id="dxy-hi">—</div></div>
     </div>
   </div>
-
   <div class="ind-card" id="card-dji" style="--card-accent:var(--blue);">
-    <div class="ind-name">Dow Jones</div><div class="ind-tick">DJI · BLUE CHIP 30</div>
+    <div class="ind-name">Dow Jones</div><div class="ind-tick">^DJI · BLUE CHIP 30</div>
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:10px;">
       <div style="font-size:9px;color:var(--text-dim);letter-spacing:.1em;text-transform:uppercase;padding-top:6px;">from 52-wk peak</div>
       <div class="decline" id="dji-pct" style="font-size:26px;">—</div>
@@ -270,9 +252,8 @@ h1{font-family:var(--cond);font-size:26px;font-weight:900;letter-spacing:.12em;t
       <div class="mticks"><div class="mtick" style="left:16.67%"></div><div class="mtick" style="left:33.33%"></div><div class="mtick" style="left:50%"></div><div class="mtick" style="left:66.67%"></div><div class="mtick" style="left:83.33%"></div></div>
     </div>
   </div>
-
   <div class="ind-card" id="card-vix" style="--card-accent:var(--vix-calm);">
-    <div class="ind-name">VIX</div><div class="ind-tick">VIX · CBOE VOLATILITY</div>
+    <div class="ind-name">VIX</div><div class="ind-tick">^VIX · CBOE VOLATILITY</div>
     <div class="ind-big" id="vix-val">—</div><div class="ind-chg" id="vix-lbl">Loading…</div>
     <div class="ind-row2">
       <div><div class="plbl">52-Wk Low</div><div class="pval" style="color:var(--green);font-size:12px;" id="vix-lo">—</div></div>
@@ -287,9 +268,8 @@ h1{font-family:var(--cond);font-size:26px;font-weight:900;letter-spacing:.12em;t
       <div class="vzone" id="vz-panic" style="--ztc:var(--vix-panic);"><div class="vz-v">40+</div><div class="vz-l">Panic</div></div>
     </div>
   </div>
-
   <div class="ind-card" id="card-wti" style="--card-accent:var(--cyan);">
-    <div class="ind-name">WTI Crude</div><div class="ind-tick">WTI · NYMEX</div>
+    <div class="ind-name">WTI Crude</div><div class="ind-tick">CL=F · NYMEX</div>
     <div class="ind-big" id="wti-val" style="color:var(--cyan);">—</div>
     <div class="ind-chg" id="wti-chg">Loading…</div>
     <div class="ind-row3">
@@ -301,21 +281,21 @@ h1{font-family:var(--cond);font-size:26px;font-weight:900;letter-spacing:.12em;t
     <div class="mbar-track"><div class="mbar-fill" id="wti-bar"></div></div>
   </div>
 </div>
-
 <div class="foot">
-  Drawdown = (52-wk high − current) / 52-wk high. Data via TwelveData (free tier, ~15 min delay).
-  Refreshes every 5 min market open, 30 min closed. Not financial advice.
+  Drawdown = (52-wk high − current) / 52-wk high. Market data via Yahoo Finance (~15 min delay).
+  200-Day MA via TwelveData (fetched once per session). Auto-refreshes every 60s market open, 5 min closed. Not financial advice.
 </div>
 </div>
 
 <script>
 // ═══════════════════════════════════════════════════
-// CONFIG — TwelveData for everything
+// CONFIG
 // ═══════════════════════════════════════════════════
-var API_KEY       = 'a4024ffb04fa4f2c9a4ae5aed53437d9';
-var TD            = 'https://api.twelvedata.com';
-var REFRESH_OPEN  = 300;   // 5 min — keeps daily credits ~550, within 800 free limit
-var REFRESH_CLOSED= 1800;  // 30 min when market closed
+var REFRESH_OPEN   = 60;
+var REFRESH_CLOSED = 300;
+// TwelveData — used ONLY for 200-day MA, fetched once per session
+var TD_KEY = 'a4024ffb04fa4f2c9a4ae5aed53437d9';
+var TD     = 'https://api.twelvedata.com';
 
 var THRESHOLDS = [
   {pct:5, icon:'⚠️',desc:'Minor pullback territory'},
@@ -325,14 +305,22 @@ var THRESHOLDS = [
   {pct:25,icon:'🚨',desc:'Severe bear market territory'},
   {pct:30,icon:'💀',desc:'Extreme crash / panic territory'},
 ];
-var TC = {5:'var(--c5)',10:'var(--c10)',15:'var(--c15)',20:'var(--c20)',25:'var(--c25)',30:'var(--c30)'};
+var TC={5:'var(--c5)',10:'var(--c10)',15:'var(--c15)',20:'var(--c20)',25:'var(--c25)',30:'var(--c30)'};
+
+// CORS proxies for Yahoo Finance
+var PROXIES=[
+  function(u){return 'https://corsproxy.io/?'+encodeURIComponent(u);},
+  function(u){return 'https://api.allorigins.win/raw?url='+encodeURIComponent(u);},
+  function(u){return 'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u);},
+  function(u){return 'https://proxy.cors.sh/'+u;},
+  function(u){return 'https://cors-anywhere.herokuapp.com/'+u;},
+];
 
 // ═══════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════
-var spData=null,ndxData=null,djiData=null,vixData=null,goldData=null,wtiData=null,dxyData=null;
+var spData=null,ndxData=null,goldData=null,dxyData=null,djiData=null,vixData=null,wtiData=null;
 var spMA=null,ndxMA=null,maFetched=false;
-var dxyChart=null,dxyChartFetched=false;
 var paused=false,cdSec=REFRESH_OPEN,cdTimer=null,rfTimer=null;
 
 // ═══════════════════════════════════════════════════
@@ -349,97 +337,102 @@ function vixLabel(v){if(v>=40)return'PANIC';if(v>=30)return'HIGH FEAR';if(v>=20)
 function isMarketOpen(){var et=new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));var d=et.getDay(),m=et.getHours()*60+et.getMinutes();return d>=1&&d<=5&&m>=570&&m<960;}
 
 // ═══════════════════════════════════════════════════
-// FETCH — TwelveData direct (no proxy needed, CORS supported)
+// YAHOO FINANCE FETCH (proven working version)
 // ═══════════════════════════════════════════════════
-function tdGet(path){
-  return fetch(TD+path+'&apikey='+API_KEY)
-    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();});
+function fetchWithTimeout(url,ms){
+  ms=ms||10000;
+  var t=new Promise(function(_,r){setTimeout(function(){r(new Error('Timeout'));},ms);});
+  return Promise.race([fetch(url),t]);
 }
 
-function parseQuote(q){
-  if(!q||q.status==='error')return null;
-  var cur  = parseFloat(q.close)||parseFloat(q.price)||0;
-  var hi52 = q.fifty_two_week ? parseFloat(q.fifty_two_week.high) : cur;
-  var lo52 = q.fifty_two_week ? parseFloat(q.fifty_two_week.low)  : cur;
-  var pc   = parseFloat(q.previous_close)||cur;
-  var chg  = parseFloat(q.change)||0;
-  var pchg = parseFloat(q.percent_change)||0;
-  return{current:cur,peak:hi52,low52:lo52,prevClose:pc,change:chg,changePct:pchg};
+function fetchYahoo(sym){
+  var base='https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(sym)+'?interval=1d&range=1y&includePrePost=false';
+  var i=0,errors=[];
+  function tryNext(){
+    if(i>=PROXIES.length)return Promise.reject(new Error('All proxies failed for '+sym+': '+errors.join(' | ')));
+    var url=PROXIES[i++](base);
+    return fetchWithTimeout(url,10000)
+      .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+      .then(function(j){
+        var meta=j&&j.chart&&j.chart.result&&j.chart.result[0]&&j.chart.result[0].meta;
+        if(!meta)throw new Error('No meta');
+        var cur=meta.regularMarketPrice||meta.chartPreviousClose;
+        if(!cur)throw new Error('Missing price');
+        return{current:cur,peak:meta.fiftyTwoWeekHigh||meta.regularMarketDayHigh||cur,low52:meta.fiftyTwoWeekLow||meta.regularMarketDayLow||cur,prevClose:meta.chartPreviousClose||meta.regularMarketPreviousClose||cur};
+      })
+      .catch(function(e){errors.push(e.message);return tryNext();});
+  }
+  return tryNext();
 }
 
-// Main quotes — batch call (7 credits per refresh)
-function fetchQuotes(){
-  return tdGet('/quote?symbol=SPX,IXIC,DJI,VIX,XAU/USD,WTI,DXY')
-    .then(function(j){
-      spData   = parseQuote(j['SPX']);
-      ndxData  = parseQuote(j['IXIC']);
-      djiData  = parseQuote(j['DJI']);
-      vixData  = parseQuote(j['VIX']);
-      goldData = parseQuote(j['XAU/USD']);
-      wtiData  = parseQuote(j['WTI']);
-      dxyData  = parseQuote(j['DXY']);
-    });
+function fetchYahooHistory(sym){
+  var base='https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(sym)+'?interval=1d&range=6mo&includePrePost=false';
+  var i=0,errors=[];
+  function tryNext(){
+    if(i>=PROXIES.length)return Promise.reject(new Error('History failed for '+sym+': '+errors.join(' | ')));
+    var url=PROXIES[i++](base);
+    return fetchWithTimeout(url,10000)
+      .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
+      .then(function(j){
+        var res=j&&j.chart&&j.chart.result&&j.chart.result[0];if(!res)throw new Error('No result');
+        var meta=res.meta,stamps=res.timestamp||[],closes=(res.indicators&&res.indicators.quote&&res.indicators.quote[0]&&res.indicators.quote[0].close)||[];
+        var cur=meta.regularMarketPrice||meta.chartPreviousClose,pc=meta.chartPreviousClose||meta.regularMarketPreviousClose;
+        var pts=[];for(var k=0;k<stamps.length;k++){if(closes[k]!=null)pts.push({t:stamps[k],c:closes[k]});}
+        return{current:cur,prevClose:pc||cur,points:pts};
+      })
+      .catch(function(e){errors.push(e.message);return tryNext();});
+  }
+  return tryNext();
 }
 
-// 200-day MA — fetched once per session (2 credits total, never repeats)
+// ═══════════════════════════════════════════════════
+// TWELVEDATA — 200-DAY MA ONLY (hardcoded key)
+// 2 credits total per session, never repeats on refresh
+// ═══════════════════════════════════════════════════
 function fetchMA(){
-  if(maFetched)return Promise.resolve();
-  return Promise.all([
-    tdGet('/ma?symbol=SPX&interval=1day&time_period=200&series_type=close&outputsize=1'),
-    tdGet('/ma?symbol=IXIC&interval=1day&time_period=200&series_type=close&outputsize=1'),
+  if(maFetched)return;
+  Promise.all([
+    fetch(TD+'/ma?symbol=SPX&interval=1day&time_period=200&series_type=close&outputsize=1&apikey='+TD_KEY).then(function(r){return r.json();}),
+    fetch(TD+'/ma?symbol=IXIC&interval=1day&time_period=200&series_type=close&outputsize=1&apikey='+TD_KEY).then(function(r){return r.json();}),
   ]).then(function(d){
-    if(d[0]&&d[0].values&&d[0].values.length>0) spMA=parseFloat(d[0].values[0].ma);
-    if(d[1]&&d[1].values&&d[1].values.length>0) ndxMA=parseFloat(d[1].values[0].ma);
+    if(d[0]&&d[0].values&&d[0].values.length>0)spMA=parseFloat(d[0].values[0].ma);
+    if(d[1]&&d[1].values&&d[1].values.length>0)ndxMA=parseFloat(d[1].values[0].ma);
     maFetched=true;
-  }).catch(function(e){console.warn('MA fetch failed:',e.message);});
-}
-
-// DXY 6-month chart — fetched once per session (1 credit)
-function fetchDxyChart(){
-  if(dxyChartFetched)return Promise.resolve();
-  return tdGet('/time_series?symbol=DXY&interval=1day&outputsize=130')
-    .then(function(j){
-      if(j&&j.values&&j.values.length>0){
-        dxyChart=j.values.slice().reverse().map(function(v){
-          return{t:v.datetime,c:parseFloat(v.close)};
-        });
-      }
-      dxyChartFetched=true;
-    }).catch(function(e){console.warn('DXY chart fetch failed:',e.message);});
+    if(spData)renderMA('sp-ma',spData.current,spMA);
+    if(ndxData)renderMA('ndx-ma',ndxData.current,ndxMA);
+  }).catch(function(e){console.warn('200MA fetch failed (non-critical):',e.message);});
 }
 
 // ═══════════════════════════════════════════════════
-// FETCH ALL
+// FETCH ALL — Yahoo Finance for everything
 // ═══════════════════════════════════════════════════
 function fetchAll(manual){
   if(paused&&!manual)return;
   document.getElementById('rfsh-btn').disabled=true;
   document.getElementById('err-box').classList.remove('show');
-
-  // Always fetch quotes. Fetch MA + chart only once (cached after first load).
-  Promise.all([fetchQuotes(), fetchMA(), fetchDxyChart()])
-    .then(function(){
-      renderAll();
-      document.getElementById('ts').textContent='Updated '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-      document.getElementById('ldot').className='ldot';
-    })
-    .catch(function(e){
-      document.getElementById('err-box').textContent='⚠ '+e.message;
-      document.getElementById('err-box').classList.add('show');
-      document.getElementById('ldot').className='ldot err';
-    })
-    .finally(function(){
-      document.getElementById('rfsh-btn').disabled=false;
-      scheduleNext();
-    });
+  Promise.all([
+    fetchYahoo('^GSPC'),fetchYahoo('^IXIC'),fetchYahoo('GC=F'),
+    fetchYahooHistory('DX-Y.NYB'),fetchYahoo('^DJI'),fetchYahoo('^VIX'),fetchYahoo('CL=F'),
+  ])
+  .then(function(r){
+    spData=r[0];ndxData=r[1];goldData=r[2];dxyData=r[3];djiData=r[4];vixData=r[5];wtiData=r[6];
+    renderAll();
+    document.getElementById('ts').textContent='Updated '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+    document.getElementById('ldot').className='ldot';
+  })
+  .catch(function(e){
+    document.getElementById('err-box').textContent='⚠ '+e.message;
+    document.getElementById('err-box').classList.add('show');
+    document.getElementById('ldot').className='ldot err';
+  })
+  .finally(function(){document.getElementById('rfsh-btn').disabled=false;scheduleNext();});
 }
 
 // ═══════════════════════════════════════════════════
 // SCHEDULE
 // ═══════════════════════════════════════════════════
 function scheduleNext(){
-  clearTimeout(rfTimer);clearInterval(cdTimer);
-  if(paused)return;
+  clearTimeout(rfTimer);clearInterval(cdTimer);if(paused)return;
   var open=isMarketOpen(),interval=open?REFRESH_OPEN:REFRESH_CLOSED;
   cdSec=interval;updateCd(interval);
   cdTimer=setInterval(function(){cdSec--;updateCd(interval);if(cdSec<=0)clearInterval(cdTimer);},1000);
@@ -447,46 +440,32 @@ function scheduleNext(){
   var badge=document.getElementById('mkt-badge');
   if(open){badge.textContent='MARKET OPEN';badge.className='mkt-badge open';}
   else{badge.textContent='MARKET CLOSED';badge.className='mkt-badge closed';}
-  document.getElementById('live-lbl').textContent=open?'LIVE · AUTO-REFRESH 5m':'AUTO-REFRESH 30m (CLOSED)';
+  document.getElementById('live-lbl').textContent=open?'LIVE · AUTO-REFRESH '+REFRESH_OPEN+'s':'AUTO-REFRESH '+(REFRESH_CLOSED/60)+'m (CLOSED)';
 }
-function updateCd(total){
-  document.getElementById('cd-fill').style.width=Math.max(0,cdSec/total*100)+'%';
-  var s=cdSec;document.getElementById('cd-txt').textContent=s>=3600?Math.ceil(s/3600)+'h':s>=60?Math.ceil(s/60)+'m':s+'s';
-}
+function updateCd(total){document.getElementById('cd-fill').style.width=Math.max(0,cdSec/total*100)+'%';document.getElementById('cd-txt').textContent=cdSec>=60?Math.ceil(cdSec/60)+'m':cdSec+'s';}
 
 // ═══════════════════════════════════════════════════
 // PAUSE / COLLAPSE
 // ═══════════════════════════════════════════════════
-function togglePause(){
-  paused=!paused;var btn=document.getElementById('pause-btn');
-  if(paused){btn.textContent='▶ Resume';clearTimeout(rfTimer);clearInterval(cdTimer);document.getElementById('ldot').className='ldot paused';document.getElementById('live-lbl').textContent='PAUSED';}
-  else{btn.textContent='⏸ Pause';fetchAll(true);}
-}
-function toggleAlerts(){
-  var body=document.getElementById('alerts-body'),chev=document.getElementById('alerts-chevron');
-  if(body.classList.contains('collapsed')){body.classList.remove('collapsed');chev.classList.remove('collapsed');body.style.maxHeight=body.scrollHeight+'px';body.addEventListener('transitionend',function h(){body.style.maxHeight='none';body.removeEventListener('transitionend',h);});}
-  else{body.style.maxHeight=body.scrollHeight+'px';requestAnimationFrame(function(){body.classList.add('collapsed');chev.classList.add('collapsed');});}
-}
+function togglePause(){paused=!paused;var btn=document.getElementById('pause-btn');if(paused){btn.textContent='▶ Resume';clearTimeout(rfTimer);clearInterval(cdTimer);document.getElementById('ldot').className='ldot paused';document.getElementById('live-lbl').textContent='PAUSED';}else{btn.textContent='⏸ Pause';fetchAll(true);}}
+function toggleAlerts(){var body=document.getElementById('alerts-body'),chev=document.getElementById('alerts-chevron');if(body.classList.contains('collapsed')){body.classList.remove('collapsed');chev.classList.remove('collapsed');body.style.maxHeight=body.scrollHeight+'px';body.addEventListener('transitionend',function h(){body.style.maxHeight='none';body.removeEventListener('transitionend',h);});}else{body.style.maxHeight=body.scrollHeight+'px';requestAnimationFrame(function(){body.classList.add('collapsed');chev.classList.add('collapsed');});}}
 
 // ═══════════════════════════════════════════════════
 // RENDER
 // ═══════════════════════════════════════════════════
 function renderAll(){
-  if(!spData||!ndxData||!djiData||!vixData||!goldData||!wtiData||!dxyData)return;
-  renderDD('sp', spData, 'card-sp', 'sp-pct','sp-peak','sp-cur','sp-loss','sp-bar','sp-chips');
+  if(!spData||!ndxData||!goldData||!dxyData||!djiData||!vixData||!wtiData)return;
+  renderDD('sp',spData,'card-sp','sp-pct','sp-peak','sp-cur','sp-loss','sp-bar','sp-chips');
   renderDD('ndx',ndxData,'card-ndx','ndx-pct','ndx-peak','ndx-cur','ndx-loss','ndx-bar','ndx-chips');
-  renderMA('sp-ma', spData.current, spMA);
+  renderMA('sp-ma',spData.current,spMA);
   renderMA('ndx-ma',ndxData.current,ndxMA);
   renderGold();renderDxy();renderDji();renderVix();renderWti();renderAlerts();
 }
 
 function renderDD(pfx,data,cardId,pctId,peakId,curId,lossId,barId,chipsId){
   var d=drawdown(data.current,data.peak),color=ddColor(d);
-  document.getElementById(pctId).textContent=(d>0?'−':'')+d.toFixed(2)+'%';
-  document.getElementById(pctId).style.color=color;
-  document.getElementById(peakId).textContent=fmt(data.peak);
-  document.getElementById(curId).textContent=fmt(data.current);
-  document.getElementById(lossId).textContent='−'+fmt(Math.max(0,data.peak-data.current));
+  document.getElementById(pctId).textContent=(d>0?'−':'')+d.toFixed(2)+'%';document.getElementById(pctId).style.color=color;
+  document.getElementById(peakId).textContent=fmt(data.peak);document.getElementById(curId).textContent=fmt(data.current);document.getElementById(lossId).textContent='−'+fmt(Math.max(0,data.peak-data.current));
   document.getElementById(cardId).style.setProperty('--card-accent',color);
   var bar=document.getElementById(barId);bar.style.width=Math.min(100,d/30*100)+'%';bar.style.background=ddBarGrad(d);
   var topHit=null;for(var t=0;t<THRESHOLDS.length;t++){if(d>=THRESHOLDS[t].pct)topHit=THRESHOLDS[t].pct;}
@@ -494,53 +473,32 @@ function renderDD(pfx,data,cardId,pctId,peakId,curId,lossId,barId,chipsId){
   for(var c=0;c<chips.length;c++){var p=parseInt(chips[c].getAttribute('data-p'),10);chips[c].classList.remove('hit','active-chip');if(d>=p){chips[c].classList.add('hit');if(p===topHit)chips[c].classList.add('active-chip');}}
 }
 
-function renderMA(elId,current,maVal){
-  var el=document.getElementById(elId);
-  if(!maVal){el.textContent='—';el.style.color='var(--text-dim)';return;}
-  el.textContent=fmt(maVal);el.style.color=current>=maVal?'var(--green)':'var(--red)';
-}
+function renderMA(elId,current,maVal){var el=document.getElementById(elId);if(!maVal){el.textContent='—';el.style.color='var(--text-dim)';return;}el.textContent=fmt(maVal);el.style.color=current>=maVal?'var(--green)':'var(--red)';}
 
-function renderGold(){
-  var v=goldData.current,chg=goldData.change,pchg=goldData.changePct,sign=chg>=0?'+':'',col=chg>=0?'var(--green)':'var(--red)';
-  document.getElementById('gold-price').textContent='$'+fmt(v);
-  var el=document.getElementById('gold-chg');el.textContent=sign+'$'+fmt(Math.abs(chg))+' ('+sign+parseFloat(pchg).toFixed(2)+'%) TODAY';el.style.color=col;
-}
+function renderGold(){var v=goldData.current,chg=v-goldData.prevClose,pchg=goldData.prevClose>0?(chg/goldData.prevClose*100):0,sign=chg>=0?'+':'',col=chg>=0?'var(--green)':'var(--red)';document.getElementById('gold-price').textContent='$'+fmt(v);var el=document.getElementById('gold-chg');el.textContent=sign+'$'+fmt(Math.abs(chg))+' ('+sign+pchg.toFixed(2)+'%) TODAY';el.style.color=col;}
 
 function renderDxy(){
-  var v=dxyData.current,chg=dxyData.change,pchg=dxyData.changePct,sign=chg>=0?'+':'',lc=chg>=0?'var(--green)':'var(--red)';
-  document.getElementById('dxy-price').textContent=v.toFixed(2);
-  var ce=document.getElementById('dxy-chg');ce.textContent=sign+Math.abs(chg).toFixed(2)+' ('+sign+parseFloat(pchg).toFixed(2)+'%) TODAY';ce.style.color=lc;
+  var cur=dxyData.current,pc=dxyData.prevClose,pts=dxyData.points,chg=cur-pc,pchg=pc>0?(chg/pc*100):0,sign=chg>=0?'+':'',lc=chg>=0?'var(--green)':'var(--red)';
+  document.getElementById('dxy-price').textContent=cur.toFixed(2);var ce=document.getElementById('dxy-chg');ce.textContent=sign+Math.abs(chg).toFixed(2)+' ('+sign+pchg.toFixed(2)+'%) TODAY';ce.style.color=lc;
   document.getElementById('card-dxy').style.setProperty('--card-accent',lc);
-
-  if(!dxyChart||dxyChart.length<2)return;
-  var closes=dxyChart.map(function(p){return p.c;}),lo=Math.min.apply(null,closes),hi=Math.max.apply(null,closes),n=closes.length,W=200,H=70,pad=2;
-  document.getElementById('dxy-lo').textContent=lo.toFixed(2);document.getElementById('dxy-hi').textContent=hi.toFixed(2);
-  document.getElementById('dxy-range').textContent=lo.toFixed(1)+' – '+hi.toFixed(1);
-  document.getElementById('dxy-d1').textContent=dxyChart[0].t.slice(0,10);
-  document.getElementById('dxy-d2').textContent=dxyChart[n-1].t.slice(0,10);
-  var xs=[],ys=[];
-  for(var i=0;i<n;i++){xs.push(pad+(i/(n-1))*(W-pad*2));ys.push(pad+(1-(closes[i]-lo)/(hi-lo||1))*(H-pad*2));}
-  var ld='',ad='';
-  for(var j=0;j<n;j++){ld+=(j===0?'M':'L')+xs[j].toFixed(1)+','+ys[j].toFixed(1)+' ';}
+  if(!pts||pts.length<2)return;
+  var closes=pts.map(function(p){return p.c;}),lo=Math.min.apply(null,closes),hi=Math.max.apply(null,closes),n=closes.length,W=200,H=70,pad=2;
+  document.getElementById('dxy-lo').textContent=lo.toFixed(2);document.getElementById('dxy-hi').textContent=hi.toFixed(2);document.getElementById('dxy-range').textContent=lo.toFixed(1)+' – '+hi.toFixed(1);
+  var fd=function(ts){return new Date(ts*1000).toLocaleDateString('en-US',{month:'short',day:'numeric'});};
+  document.getElementById('dxy-d1').textContent=fd(pts[0].t);document.getElementById('dxy-d2').textContent=fd(pts[n-1].t);
+  var xs=[],ys=[];for(var i=0;i<n;i++){xs.push(pad+(i/(n-1))*(W-pad*2));ys.push(pad+(1-(closes[i]-lo)/(hi-lo||1))*(H-pad*2));}
+  var ld='',ad='';for(var j=0;j<n;j++){ld+=(j===0?'M':'L')+xs[j].toFixed(1)+','+ys[j].toFixed(1)+' ';}
   ad=ld+'L'+xs[n-1].toFixed(1)+','+H+' L'+xs[0].toFixed(1)+','+H+' Z';
   document.getElementById('dxy-line').setAttribute('d',ld);document.getElementById('dxy-line').setAttribute('stroke',lc);
   document.getElementById('dxy-area').setAttribute('d',ad);document.getElementById('dxy-grad-stop').setAttribute('stop-color',lc);
   var dot=document.getElementById('dxy-dot');dot.setAttribute('cx',xs[n-1].toFixed(1));dot.setAttribute('cy',ys[n-1].toFixed(1));dot.setAttribute('fill',lc);
 }
 
-function renderDji(){
-  var d=drawdown(djiData.current,djiData.peak),color=ddColor(d);
-  document.getElementById('dji-pct').textContent=(d>0?'−':'')+d.toFixed(2)+'%';document.getElementById('dji-pct').style.color=color;
-  document.getElementById('card-dji').style.setProperty('--card-accent',color);
-  document.getElementById('dji-peak').textContent=fmt(djiData.peak);document.getElementById('dji-cur').textContent=fmt(djiData.current);document.getElementById('dji-loss').textContent='−'+fmt(Math.max(0,djiData.peak-djiData.current));
-  var bar=document.getElementById('dji-bar');bar.style.width=Math.min(100,d/30*100)+'%';bar.style.background=ddBarGrad(d);
-}
+function renderDji(){var d=drawdown(djiData.current,djiData.peak),color=ddColor(d);document.getElementById('dji-pct').textContent=(d>0?'−':'')+d.toFixed(2)+'%';document.getElementById('dji-pct').style.color=color;document.getElementById('card-dji').style.setProperty('--card-accent',color);document.getElementById('dji-peak').textContent=fmt(djiData.peak);document.getElementById('dji-cur').textContent=fmt(djiData.current);document.getElementById('dji-loss').textContent='−'+fmt(Math.max(0,djiData.peak-djiData.current));var bar=document.getElementById('dji-bar');bar.style.width=Math.min(100,d/30*100)+'%';bar.style.background=ddBarGrad(d);}
 
 function renderVix(){
   var v=vixData.current,color=vixColor(v);
-  document.getElementById('vix-val').textContent=fmt1(v);document.getElementById('vix-val').style.color=color;
-  document.getElementById('vix-lbl').textContent=vixLabel(v);document.getElementById('vix-lbl').style.color=color;
-  document.getElementById('card-vix').style.setProperty('--card-accent',color);
+  document.getElementById('vix-val').textContent=fmt1(v);document.getElementById('vix-val').style.color=color;document.getElementById('vix-lbl').textContent=vixLabel(v);document.getElementById('vix-lbl').style.color=color;document.getElementById('card-vix').style.setProperty('--card-accent',color);
   document.getElementById('vix-lo').textContent=fmt1(vixData.low52);document.getElementById('vix-hi').textContent=fmt1(vixData.peak);
   var bar=document.getElementById('vix-bar');bar.style.width=Math.min(100,v/60*100)+'%';
   if(v<20)bar.style.background='var(--vix-calm)';else if(v<30)bar.style.background='linear-gradient(90deg,var(--vix-calm),var(--vix-elev))';else if(v<40)bar.style.background='linear-gradient(90deg,var(--vix-elev),var(--vix-fear))';else bar.style.background='linear-gradient(90deg,var(--vix-fear),var(--vix-panic))';
@@ -548,13 +506,7 @@ function renderVix(){
   for(var z=0;z<zones.length;z++){var el=document.getElementById(zones[z].id);el.classList.remove('lit','zone-active');if(v>=zones[z].min){el.classList.add('lit');if(v<zones[z].max)el.classList.add('zone-active');}}
 }
 
-function renderWti(){
-  var v=wtiData.current,lo=wtiData.low52,hi=wtiData.peak,chg=wtiData.change,pchg=wtiData.changePct,sign=chg>=0?'+':'',col=chg>=0?'var(--green)':'var(--red)';
-  document.getElementById('wti-val').textContent='$'+fmt(v);
-  var el=document.getElementById('wti-chg');el.textContent=sign+'$'+fmt(Math.abs(chg))+' ('+sign+parseFloat(pchg).toFixed(2)+'%) TODAY';el.style.color=col;
-  document.getElementById('wti-lo').textContent='$'+fmt(lo);document.getElementById('wti-cur').textContent='$'+fmt(v);document.getElementById('wti-hi').textContent='$'+fmt(hi);
-  var bar=document.getElementById('wti-bar');bar.style.width=rangePct(v,lo,hi)+'%';bar.style.background='linear-gradient(90deg,var(--green),var(--cyan))';
-}
+function renderWti(){var v=wtiData.current,lo=wtiData.low52,hi=wtiData.peak,chg=v-wtiData.prevClose,pchg=wtiData.prevClose>0?(chg/wtiData.prevClose*100):0,sign=chg>=0?'+':'',col=chg>=0?'var(--green)':'var(--red)';document.getElementById('wti-val').textContent='$'+fmt(v);var el=document.getElementById('wti-chg');el.textContent=sign+'$'+fmt(Math.abs(chg))+' ('+sign+pchg.toFixed(2)+'%) TODAY';el.style.color=col;document.getElementById('wti-lo').textContent='$'+fmt(lo);document.getElementById('wti-cur').textContent='$'+fmt(v);document.getElementById('wti-hi').textContent='$'+fmt(hi);var bar=document.getElementById('wti-bar');bar.style.width=rangePct(v,lo,hi)+'%';bar.style.background='linear-gradient(90deg,var(--green),var(--cyan))';}
 
 function renderAlerts(){
   var sd=drawdown(spData.current,spData.peak),nd=drawdown(ndxData.current,ndxData.peak),vv=vixData.current;
@@ -577,7 +529,8 @@ function mkB(lbl,hit,color){if(hit)return'<span class="badge hit" style="color:'
 // ═══════════════════════════════════════════════════
 window.addEventListener('load',function(){
   document.getElementById('alerts-body').style.maxHeight='none';
-  fetchAll(true);
+  fetchMA();      // TwelveData: 200MA, once, silent fail if unavailable
+  fetchAll(true); // Yahoo Finance: all market data
 });
 </script>
 </body>
