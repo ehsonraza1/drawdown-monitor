@@ -47,6 +47,8 @@ h1{font-family:var(--cond);font-size:26px;font-weight:900;letter-spacing:.12em;t
 #cd-txt{font-size:10px;color:var(--text-dim);min-width:32px;text-align:right;}
 .err-box{background:rgba(255,69,96,.08);border:1px solid rgba(255,69,96,.3);padding:14px 18px;color:var(--red);font-size:11px;line-height:1.8;display:none;margin-bottom:18px;word-break:break-all;}
 .err-box.show{display:block;}
+.err-box{white-space:pre-line;}
+.ldot.warn{background:var(--amber);animation:none;}
 .section-label{font-family:var(--cond);font-size:11px;font-weight:600;letter-spacing:.25em;text-transform:uppercase;color:var(--text-dim);margin-bottom:12px;display:flex;align-items:center;gap:8px;}
 .section-label::before{content:'';display:inline-block;width:20px;height:1px;background:var(--border2);}
 .section-label::after{content:'';flex:1;height:1px;background:var(--border);}
@@ -283,7 +285,7 @@ h1{font-family:var(--cond);font-size:26px;font-weight:900;letter-spacing:.12em;t
 </div>
 <div class="foot">
   Drawdown = (52-wk high − current) / 52-wk high. Market data via Yahoo Finance (~15 min delay).
-  200-Day MA via TwelveData (fetched once per session). Auto-refreshes every 60s market open, 5 min closed. Not financial advice.
+  200-Day MA computed from Yahoo daily closes. Fallback snapshot via GitHub Actions (~5 min). Auto-refreshes every 60s market open, 5 min closed. Last good data is cached locally. Not financial advice.
 </div>
 </div>
 
@@ -293,9 +295,23 @@ h1{font-family:var(--cond);font-size:26px;font-weight:900;letter-spacing:.12em;t
 // ═══════════════════════════════════════════════════
 var REFRESH_OPEN   = 60;
 var REFRESH_CLOSED = 300;
-// TwelveData — used ONLY for 200-day MA, fetched once per session
-var TD_KEY = 'a4024ffb04fa4f2c9a4ae5aed53437d9';
-var TD     = 'https://api.twelvedata.com';
+var TIMEOUT_MS     = 8000;
+
+// Fallback feed: data.json written every few minutes by the GitHub Action
+// (.github/workflows/market-data.yml) to the "market-data" branch of this repo.
+// Auto-detected on *.github.io. If you use a custom domain, set it explicitly:
+//   'https://raw.githubusercontent.com/OWNER/REPO/market-data/data.json'
+var DATA_URL = '';
+(function(){
+  if(DATA_URL)return;
+  var h=location.hostname;
+  if(!/\.github\.io$/i.test(h))return;
+  var owner=h.split('.')[0], seg=location.pathname.split('/').filter(Boolean)[0];
+  var repo=(seg&&!/\.html?$/i.test(seg))?seg:h;   // project site vs user site (owner.github.io)
+  DATA_URL='https://raw.githubusercontent.com/'+owner+'/'+repo+'/market-data/data.json';
+})();
+
+var SYMBOLS = {sp:'^GSPC', ndx:'^IXIC', gold:'GC=F', dxy:'DX-Y.NYB', dji:'^DJI', vix:'^VIX', wti:'CL=F'};
 
 var THRESHOLDS = [
   {pct:5, icon:'⚠️',desc:'Minor pullback territory'},
@@ -307,27 +323,36 @@ var THRESHOLDS = [
 ];
 var TC={5:'var(--c5)',10:'var(--c10)',15:'var(--c15)',20:'var(--c20)',25:'var(--c25)',30:'var(--c30)'};
 
-// CORS proxies for Yahoo Finance
-var PROXIES=[
-  function(u){return 'https://corsproxy.io/?'+encodeURIComponent(u);},
-  function(u){return 'https://api.allorigins.win/raw?url='+encodeURIComponent(u);},
-  function(u){return 'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u);},
-  function(u){return 'https://proxy.cors.sh/'+u;},
-  function(u){return 'https://cors-anywhere.herokuapp.com/'+u;},
-];
+// CORS proxies. Dead ones removed (cors-anywhere.herokuapp = always 403, proxy.cors.sh = needs key).
+// /get-style proxies wrap the payload as {contents:"..."}; fetchJson unwraps that.
+var PROXIES = [];
+PROXIES.push(
+  {name:'allorigins',     wrap:function(u){return 'https://api.allorigins.win/raw?url='+encodeURIComponent(u);}},
+  {name:'allorigins-get', wrap:function(u){return 'https://api.allorigins.win/get?url='+encodeURIComponent(u);}},
+  {name:'codetabs',       wrap:function(u){return 'https://api.codetabs.com/v1/proxy?quest='+encodeURIComponent(u);}},
+  {name:'corsproxy.io',   wrap:function(u){return 'https://corsproxy.io/?url='+encodeURIComponent(u);}}
+);
 
 // ═══════════════════════════════════════════════════
 // STATE
 // ═══════════════════════════════════════════════════
-var spData=null,ndxData=null,goldData=null,dxyData=null,djiData=null,vixData=null,wtiData=null;
-var spMA=null,ndxMA=null,maFetched=false;
-var paused=false,cdSec=REFRESH_OPEN,cdTimer=null,rfTimer=null;
+var state = {sp:null, ndx:null, gold:null, dxy:null, dji:null, vix:null, wti:null};
+var lastOkAt = null;
+var paused=false, busy=false, cdSec=REFRESH_OPEN, cdTimer=null, rfTimer=null;
+var goodProxy = 0; // loaded from localStorage at boot
 
 // ═══════════════════════════════════════════════════
 // HELPERS
 // ═══════════════════════════════════════════════════
+var store = {
+  get:function(k,def){try{var v=localStorage.getItem(k);return v==null?def:JSON.parse(v);}catch(e){return def;}},
+  set:function(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}}
+};
+function $(id){return document.getElementById(id);}
 function fmt(n){return Number(n).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmt1(n){return Number(n).toLocaleString('en-US',{minimumFractionDigits:1,maximumFractionDigits:1});}
+function fmtTime(ms){return new Date(ms).toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});}
+function isNum(x){return typeof x==='number'&&isFinite(x);}
 function drawdown(cur,peak){if(!peak||peak<=0)return 0;return Math.max(0,(peak-cur)/peak*100);}
 function rangePct(cur,lo,hi){if(hi<=lo)return 50;return Math.max(0,Math.min(100,(cur-lo)/(hi-lo)*100));}
 function ddColor(d){if(d>=30)return'var(--c30)';if(d>=25)return'var(--c25)';if(d>=20)return'var(--c20)';if(d>=15)return'var(--c15)';if(d>=10)return'var(--c10)';if(d>=5)return'var(--c5)';return'var(--green)';}
@@ -335,202 +360,292 @@ function ddBarGrad(d){if(d<=0)return'var(--green)';if(d<5)return'linear-gradient
 function vixColor(v){if(v>=40)return'var(--vix-panic)';if(v>=30)return'var(--vix-fear)';if(v>=20)return'var(--vix-elev)';return'var(--vix-calm)';}
 function vixLabel(v){if(v>=40)return'PANIC';if(v>=30)return'HIGH FEAR';if(v>=20)return'ELEVATED';return'CALM';}
 function isMarketOpen(){var et=new Date(new Date().toLocaleString('en-US',{timeZone:'America/New_York'}));var d=et.getDay(),m=et.getHours()*60+et.getMinutes();return d>=1&&d<=5&&m>=570&&m<960;}
+function safe(fn){try{fn();}catch(e){console.error(e);}}
 
 // ═══════════════════════════════════════════════════
-// YAHOO FINANCE FETCH (proven working version)
+// FETCH
 // ═══════════════════════════════════════════════════
-function fetchWithTimeout(url,ms){
-  ms=ms||10000;
-  var t=new Promise(function(_,r){setTimeout(function(){r(new Error('Timeout'));},ms);});
-  return Promise.race([fetch(url),t]);
+// Real timeout: aborts the request instead of leaving it hanging.
+function fetchJson(url){
+  var ctl=new AbortController(), timer=setTimeout(function(){ctl.abort();},TIMEOUT_MS);
+  return fetch(url,{signal:ctl.signal,cache:'no-store'})
+    .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.text();})
+    .then(function(txt){
+      var j;try{j=JSON.parse(txt);}catch(e){throw new Error('Not JSON');}
+      if(j&&typeof j.contents==='string'){try{j=JSON.parse(j.contents);}catch(e){throw new Error('Bad wrapped JSON');}}
+      return j;
+    })
+    .catch(function(e){throw new Error(e.name==='AbortError'?'Timeout':(e.message||'Failed'));})
+    .finally(function(){clearTimeout(timer);});
 }
 
-function fetchYahoo(sym){
-  var base='https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(sym)+'?interval=1d&range=1y&includePrePost=false';
-  var i=0,errors=[];
-  function tryNext(){
-    if(i>=PROXIES.length)return Promise.reject(new Error('All proxies failed for '+sym+': '+errors.join(' | ')));
-    var url=PROXIES[i++](base);
-    return fetchWithTimeout(url,10000)
-      .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
-      .then(function(j){
-        var meta=j&&j.chart&&j.chart.result&&j.chart.result[0]&&j.chart.result[0].meta;
-        if(!meta)throw new Error('No meta');
-        var cur=meta.regularMarketPrice||meta.chartPreviousClose;
-        if(!cur)throw new Error('Missing price');
-        return{current:cur,peak:meta.fiftyTwoWeekHigh||meta.regularMarketDayHigh||cur,low52:meta.fiftyTwoWeekLow||meta.regularMarketDayLow||cur,prevClose:meta.chartPreviousClose||meta.regularMarketPreviousClose||cur};
-      })
-      .catch(function(e){errors.push(e.message);return tryNext();});
+// Parse a Yahoo v8 chart response. Everything is derived from the daily bars where possible,
+// so we don't depend on meta fields that Yahoo sometimes omits.
+function parseChart(j){
+  var res=j&&j.chart&&j.chart.result&&j.chart.result[0];
+  if(!res){var ye=j&&j.chart&&j.chart.error;throw new Error(ye&&ye.description?ye.description:'No chart data');}
+  var meta=res.meta||{}, ts=res.timestamp||[], q=(res.indicators&&res.indicators.quote&&res.indicators.quote[0])||{};
+  var C=q.close||[], Hh=q.high||[], Ll=q.low||[], pts=[];
+  for(var i=0;i<ts.length;i++){
+    if(!isNum(C[i]))continue;
+    pts.push({t:ts[i],c:C[i],h:isNum(Hh[i])?Hh[i]:C[i],l:isNum(Ll[i])?Ll[i]:C[i]});
   }
-  return tryNext();
+  if(pts.length<2)throw new Error('Too few data points');
+  var n=pts.length;
+  var current=isNum(meta.regularMarketPrice)?meta.regularMarketPrice:pts[n-1].c;
+  var hiCalc=-Infinity,loCalc=Infinity;
+  for(var k=0;k<n;k++){if(pts[k].h>hiCalc)hiCalc=pts[k].h;if(pts[k].l<loCalc)loCalc=pts[k].l;}
+  var peak=isNum(meta.fiftyTwoWeekHigh)?meta.fiftyTwoWeekHigh:hiCalc;
+  var low52=isNum(meta.fiftyTwoWeekLow)?meta.fiftyTwoWeekLow:loCalc;
+  peak=Math.max(peak,current);low52=Math.min(low52,current);
+  // FIX: with range=1y, meta.chartPreviousClose is the close from a YEAR ago, not yesterday.
+  // The last bar is the latest session, so the bar before it is the prior close.
+  var prevClose=pts[n-2].c;
+  // 200-day MA computed locally (replaces TwelveData)
+  var ma200=null;
+  if(n>=200){var s=0;for(var m=n-200;m<n;m++)s+=pts[m].c;ma200=s/200;}
+  return {current:current,peak:peak,low52:low52,prevClose:prevClose,ma200:ma200,points:pts};
 }
 
-function fetchYahooHistory(sym){
-  var base='https://query1.finance.yahoo.com/v8/finance/chart/'+encodeURIComponent(sym)+'?interval=1d&range=6mo&includePrePost=false';
-  var i=0,errors=[];
-  function tryNext(){
-    if(i>=PROXIES.length)return Promise.reject(new Error('History failed for '+sym+': '+errors.join(' | ')));
-    var url=PROXIES[i++](base);
-    return fetchWithTimeout(url,10000)
-      .then(function(r){if(!r.ok)throw new Error('HTTP '+r.status);return r.json();})
-      .then(function(j){
-        var res=j&&j.chart&&j.chart.result&&j.chart.result[0];if(!res)throw new Error('No result');
-        var meta=res.meta,stamps=res.timestamp||[],closes=(res.indicators&&res.indicators.quote&&res.indicators.quote[0]&&res.indicators.quote[0].close)||[];
-        var cur=meta.regularMarketPrice||meta.chartPreviousClose,pc=meta.chartPreviousClose||meta.regularMarketPreviousClose;
-        var pts=[];for(var k=0;k<stamps.length;k++){if(closes[k]!=null)pts.push({t:stamps[k],c:closes[k]});}
-        return{current:cur,prevClose:pc||cur,points:pts};
-      })
-      .catch(function(e){errors.push(e.message);return tryNext();});
+function chartUrl(host,sym){
+  // minute bucket defeats stale proxy caches without hammering anything
+  return 'https://'+host+'/v8/finance/chart/'+encodeURIComponent(sym)+'?interval=1d&range=1y&includePrePost=false&_='+Math.floor(Date.now()/60000);
+}
+
+// Try the last proxy that worked first. If it fails, race all the others at once
+// (bounded latency: ~2 timeouts max instead of 5 sequential ones).
+function fetchSymbol(sym){
+  var errs=[], first=(goodProxy>=0&&goodProxy<PROXIES.length)?goodProxy:0;
+  function attempt(i,host){
+    return fetchJson(PROXIES[i].wrap(chartUrl(host,sym))).then(parseChart)
+      .catch(function(e){errs.push(PROXIES[i].name+': '+e.message);throw e;});
   }
-  return tryNext();
+  return attempt(first,'query1.finance.yahoo.com').catch(function(){
+    var won=false, rest=[];
+    for(var i=0;i<PROXIES.length;i++){
+      if(i===first)continue;
+      (function(idx){
+        rest.push(attempt(idx,'query2.finance.yahoo.com').then(function(d){
+          if(!won){won=true;goodProxy=idx;store.set('mm_proxy',idx);}
+          return d;
+        }));
+      })(i);
+    }
+    if(!rest.length)throw new Error(errs.join(' | '));
+    return Promise.any(rest).catch(function(){throw new Error(errs.join(' | '));});
+  });
 }
 
 // ═══════════════════════════════════════════════════
-// TWELVEDATA — 200-DAY MA ONLY (hardcoded key)
-// 2 credits total per session, never repeats on refresh
+// FETCH ALL — each symbol independent; one failure no longer kills the page
 // ═══════════════════════════════════════════════════
-function fetchMA(){
-  if(maFetched)return;
-  Promise.all([
-    fetch(TD+'/ma?symbol=SPX&interval=1day&time_period=200&series_type=close&outputsize=1&apikey='+TD_KEY).then(function(r){return r.json();}),
-    fetch(TD+'/ma?symbol=IXIC&interval=1day&time_period=200&series_type=close&outputsize=1&apikey='+TD_KEY).then(function(r){return r.json();}),
-  ]).then(function(d){
-    if(d[0]&&d[0].values&&d[0].values.length>0)spMA=parseFloat(d[0].values[0].ma);
-    if(d[1]&&d[1].values&&d[1].values.length>0)ndxMA=parseFloat(d[1].values[0].ma);
-    maFetched=true;
-    if(spData)renderMA('sp-ma',spData.current,spMA);
-    if(ndxData)renderMA('ndx-ma',ndxData.current,ndxMA);
-  }).catch(function(e){console.warn('200MA fetch failed (non-critical):',e.message);});
+// Snapshot from the GitHub Action. Same-origin-free (raw.githubusercontent allows CORS), no proxy needed.
+function fetchSnapshot(){
+  if(!DATA_URL)return Promise.resolve(null);
+  return fetchJson(DATA_URL+'?t='+Math.floor(Date.now()/60000))
+    .then(function(s){return s&&s.symbols?s:null;})
+    .catch(function(e){console.warn('Snapshot unavailable:',e.message);return null;});
+}
+// Use a snapshot value only where it's newer than what we already show.
+function applySnapshot(snap){
+  if(!snap)return;
+  Object.keys(SYMBOLS).forEach(function(k){
+    var s=snap.symbols[k];if(!s||!isNum(s.current))return;
+    var at=s.asOf||snap.updatedAt||0;
+    if(!state[k]||(state[k].asOf||0)<at)state[k]=Object.assign({},s,{asOf:at,src:'snap'});
+  });
 }
 
-// ═══════════════════════════════════════════════════
-// FETCH ALL — Yahoo Finance for everything
-// ═══════════════════════════════════════════════════
 function fetchAll(manual){
+  if(busy)return;
   if(paused&&!manual)return;
-  document.getElementById('rfsh-btn').disabled=true;
-  document.getElementById('err-box').classList.remove('show');
-  Promise.all([
-    fetchYahoo('^GSPC'),fetchYahoo('^IXIC'),fetchYahoo('GC=F'),
-    fetchYahooHistory('DX-Y.NYB'),fetchYahoo('^DJI'),fetchYahoo('^VIX'),fetchYahoo('CL=F'),
-  ])
-  .then(function(r){
-    spData=r[0];ndxData=r[1];goldData=r[2];dxyData=r[3];djiData=r[4];vixData=r[5];wtiData=r[6];
-    renderAll();
-    document.getElementById('ts').textContent='Updated '+new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-    document.getElementById('ldot').className='ldot';
-  })
-  .catch(function(e){
-    document.getElementById('err-box').textContent='⚠ '+e.message;
-    document.getElementById('err-box').classList.add('show');
-    document.getElementById('ldot').className='ldot err';
-  })
-  .finally(function(){document.getElementById('rfsh-btn').disabled=false;scheduleNext();});
+  busy=true;$('rfsh-btn').disabled=true;
+  var keys=Object.keys(SYMBOLS);
+  // Snapshot usually lands in <1s, so the page fills in fast even while proxies are timing out.
+  var snapP=fetchSnapshot().then(function(s){if(s){applySnapshot(s);renderAll();}return s;});
+  var liveP=Promise.allSettled(keys.map(function(k){return fetchSymbol(SYMBOLS[k]);}));
+  Promise.all([snapP,liveP])
+    .then(function(r){
+      var snap=r[0],results=r[1],now=Date.now(),failed=[],viaSnap=[];
+      results.forEach(function(res,i){
+        var k=keys[i];
+        if(res.status==='fulfilled'){state[k]=Object.assign(res.value,{asOf:now,src:'live'});return;}
+        var msg=res.reason&&res.reason.message||'Failed';
+        if(snap&&state[k]&&state[k].src==='snap')viaSnap.push(k);
+        else failed.push({sym:SYMBOLS[k],msg:msg});
+      });
+      if(failed.length<keys.length){lastOkAt=now;saveCache();}
+      renderAll();
+      showStatus(failed,keys.length,viaSnap);
+    })
+    .catch(function(e){console.error(e);showStatus([{sym:'all',msg:e.message}],1,[]);})
+    .finally(function(){busy=false;$('rfsh-btn').disabled=false;scheduleNext();});
+}
+
+var LABELS={sp:'SPX',ndx:'NDX',gold:'Gold',dxy:'DXY',dji:'DJI',vix:'VIX',wti:'WTI'};
+function showStatus(failed,total,viaSnap){
+  var box=$('err-box'),dot=$('ldot');
+  var snapNote='';
+  if(viaSnap&&viaSnap.length){
+    var oldest=Math.min.apply(null,viaSnap.map(function(k){return state[k].asOf||0;}));
+    snapNote=viaSnap.length===total?' · via GitHub snapshot '+fmtTime(oldest)
+      :' · '+viaSnap.map(function(k){return LABELS[k];}).join(', ')+' via snapshot '+fmtTime(oldest);
+  }
+  if(!failed.length){
+    box.classList.remove('show');dot.className='ldot';
+    $('ts').textContent='Updated '+fmtTime(lastOkAt)+snapNote;
+    return;
+  }
+  var allFailed=failed.length>=total;
+  dot.className=allFailed?'ldot err':'ldot warn';
+  var head=allFailed?'⚠ Could not reach any data source.':'⚠ Could not refresh: '+failed.map(function(f){return f.sym;}).join(', ')+'.';
+  var tail=lastOkAt?' Showing last good values from '+fmtTime(lastOkAt)+'. Will retry automatically.':' Will retry automatically.';
+  var details=failed.slice(0,3).map(function(f){return f.sym+' → '+f.msg;}).join('\n');
+  if(allFailed&&!DATA_URL)details+='\nNo snapshot fallback configured — set DATA_URL at the top of the script.';
+  box.textContent=head+tail+'\n'+details;
+  box.classList.add('show');
+  if(lastOkAt)$('ts').textContent='Last good '+fmtTime(lastOkAt)+snapNote;
+}
+
+// ═══════════════════════════════════════════════════
+// CACHE — page shows last good data instantly on reload
+// ═══════════════════════════════════════════════════
+function saveCache(){
+  var slim={};
+  Object.keys(state).forEach(function(k){
+    var d=state[k];if(!d)return;
+    slim[k]={current:d.current,peak:d.peak,low52:d.low52,prevClose:d.prevClose,ma200:d.ma200,asOf:d.asOf||lastOkAt,src:d.src,points:k==='dxy'?d.points:null};
+  });
+  store.set('mm_cache',{at:lastOkAt,state:slim});
+}
+function loadCache(){
+  var c=store.get('mm_cache',null);
+  if(!c||!c.state)return false;
+  Object.keys(c.state).forEach(function(k){if(k in state)state[k]=c.state[k];});
+  lastOkAt=c.at||null;
+  return true;
 }
 
 // ═══════════════════════════════════════════════════
 // SCHEDULE
 // ═══════════════════════════════════════════════════
 function scheduleNext(){
-  clearTimeout(rfTimer);clearInterval(cdTimer);if(paused)return;
+  clearTimeout(rfTimer);clearInterval(cdTimer);
   var open=isMarketOpen(),interval=open?REFRESH_OPEN:REFRESH_CLOSED;
+  var badge=$('mkt-badge');
+  if(open){badge.textContent='MARKET OPEN';badge.className='mkt-badge open';}
+  else{badge.textContent='MARKET CLOSED';badge.className='mkt-badge closed';}
+  if(paused)return;
   cdSec=interval;updateCd(interval);
   cdTimer=setInterval(function(){cdSec--;updateCd(interval);if(cdSec<=0)clearInterval(cdTimer);},1000);
   rfTimer=setTimeout(function(){fetchAll(false);},interval*1000);
-  var badge=document.getElementById('mkt-badge');
-  if(open){badge.textContent='MARKET OPEN';badge.className='mkt-badge open';}
-  else{badge.textContent='MARKET CLOSED';badge.className='mkt-badge closed';}
-  document.getElementById('live-lbl').textContent=open?'LIVE · AUTO-REFRESH '+REFRESH_OPEN+'s':'AUTO-REFRESH '+(REFRESH_CLOSED/60)+'m (CLOSED)';
+  $('live-lbl').textContent=open?'LIVE · AUTO-REFRESH '+REFRESH_OPEN+'s':'AUTO-REFRESH '+(REFRESH_CLOSED/60)+'m (CLOSED)';
 }
-function updateCd(total){document.getElementById('cd-fill').style.width=Math.max(0,cdSec/total*100)+'%';document.getElementById('cd-txt').textContent=cdSec>=60?Math.ceil(cdSec/60)+'m':cdSec+'s';}
+function updateCd(total){$('cd-fill').style.width=Math.max(0,cdSec/total*100)+'%';$('cd-txt').textContent=cdSec>=60?Math.ceil(cdSec/60)+'m':Math.max(0,cdSec)+'s';}
 
 // ═══════════════════════════════════════════════════
 // PAUSE / COLLAPSE
 // ═══════════════════════════════════════════════════
-function togglePause(){paused=!paused;var btn=document.getElementById('pause-btn');if(paused){btn.textContent='▶ Resume';clearTimeout(rfTimer);clearInterval(cdTimer);document.getElementById('ldot').className='ldot paused';document.getElementById('live-lbl').textContent='PAUSED';}else{btn.textContent='⏸ Pause';fetchAll(true);}}
-function toggleAlerts(){var body=document.getElementById('alerts-body'),chev=document.getElementById('alerts-chevron');if(body.classList.contains('collapsed')){body.classList.remove('collapsed');chev.classList.remove('collapsed');body.style.maxHeight=body.scrollHeight+'px';body.addEventListener('transitionend',function h(){body.style.maxHeight='none';body.removeEventListener('transitionend',h);});}else{body.style.maxHeight=body.scrollHeight+'px';requestAnimationFrame(function(){body.classList.add('collapsed');chev.classList.add('collapsed');});}}
+function togglePause(){
+  paused=!paused;var btn=$('pause-btn');
+  if(paused){btn.textContent='▶ Resume';clearTimeout(rfTimer);clearInterval(cdTimer);$('ldot').className='ldot paused';$('live-lbl').textContent='PAUSED';$('cd-txt').textContent='—';}
+  else{btn.textContent='⏸ Pause';fetchAll(true);}
+}
+function toggleAlerts(){var body=$('alerts-body'),chev=$('alerts-chevron');if(body.classList.contains('collapsed')){body.classList.remove('collapsed');chev.classList.remove('collapsed');body.style.maxHeight=body.scrollHeight+'px';body.addEventListener('transitionend',function h(){body.style.maxHeight='none';body.removeEventListener('transitionend',h);});}else{body.style.maxHeight=body.scrollHeight+'px';requestAnimationFrame(function(){body.classList.add('collapsed');chev.classList.add('collapsed');});}}
 
 // ═══════════════════════════════════════════════════
-// RENDER
+// RENDER — each card renders on its own; missing data leaves just that card blank
 // ═══════════════════════════════════════════════════
 function renderAll(){
-  if(!spData||!ndxData||!goldData||!dxyData||!djiData||!vixData||!wtiData)return;
-  renderDD('sp',spData,'card-sp','sp-pct','sp-peak','sp-cur','sp-loss','sp-bar','sp-chips');
-  renderDD('ndx',ndxData,'card-ndx','ndx-pct','ndx-peak','ndx-cur','ndx-loss','ndx-bar','ndx-chips');
-  renderMA('sp-ma',spData.current,spMA);
-  renderMA('ndx-ma',ndxData.current,ndxMA);
-  renderGold();renderDxy();renderDji();renderVix();renderWti();renderAlerts();
+  if(state.sp) safe(function(){renderDD(state.sp,'card-sp','sp-pct','sp-peak','sp-cur','sp-loss','sp-bar','sp-chips');renderMA('sp-ma',state.sp);});
+  if(state.ndx)safe(function(){renderDD(state.ndx,'card-ndx','ndx-pct','ndx-peak','ndx-cur','ndx-loss','ndx-bar','ndx-chips');renderMA('ndx-ma',state.ndx);});
+  if(state.gold)safe(renderGold);
+  if(state.dxy) safe(renderDxy);
+  if(state.dji) safe(renderDji);
+  if(state.vix) safe(renderVix);
+  if(state.wti) safe(renderWti);
+  safe(renderAlerts);
 }
 
-function renderDD(pfx,data,cardId,pctId,peakId,curId,lossId,barId,chipsId){
+function renderDD(data,cardId,pctId,peakId,curId,lossId,barId,chipsId){
   var d=drawdown(data.current,data.peak),color=ddColor(d);
-  document.getElementById(pctId).textContent=(d>0?'−':'')+d.toFixed(2)+'%';document.getElementById(pctId).style.color=color;
-  document.getElementById(peakId).textContent=fmt(data.peak);document.getElementById(curId).textContent=fmt(data.current);document.getElementById(lossId).textContent='−'+fmt(Math.max(0,data.peak-data.current));
-  document.getElementById(cardId).style.setProperty('--card-accent',color);
-  var bar=document.getElementById(barId);bar.style.width=Math.min(100,d/30*100)+'%';bar.style.background=ddBarGrad(d);
+  $(pctId).textContent=(d>0?'−':'')+d.toFixed(2)+'%';$(pctId).style.color=color;
+  $(peakId).textContent=fmt(data.peak);$(curId).textContent=fmt(data.current);$(lossId).textContent='−'+fmt(Math.max(0,data.peak-data.current));
+  $(cardId).style.setProperty('--card-accent',color);
+  var bar=$(barId);bar.style.width=Math.min(100,d/30*100)+'%';bar.style.background=ddBarGrad(d);
   var topHit=null;for(var t=0;t<THRESHOLDS.length;t++){if(d>=THRESHOLDS[t].pct)topHit=THRESHOLDS[t].pct;}
-  var chips=document.getElementById(chipsId).querySelectorAll('.chip');
+  var chips=$(chipsId).querySelectorAll('.chip');
   for(var c=0;c<chips.length;c++){var p=parseInt(chips[c].getAttribute('data-p'),10);chips[c].classList.remove('hit','active-chip');if(d>=p){chips[c].classList.add('hit');if(p===topHit)chips[c].classList.add('active-chip');}}
 }
 
-function renderMA(elId,current,maVal){var el=document.getElementById(elId);if(!maVal){el.textContent='—';el.style.color='var(--text-dim)';return;}el.textContent=fmt(maVal);el.style.color=current>=maVal?'var(--green)':'var(--red)';}
+function renderMA(elId,data){var el=$(elId);if(!data||!isNum(data.ma200)){el.textContent='—';el.style.color='var(--text-dim)';return;}el.textContent=fmt(data.ma200);el.style.color=data.current>=data.ma200?'var(--green)':'var(--red)';}
 
-function renderGold(){var v=goldData.current,chg=v-goldData.prevClose,pchg=goldData.prevClose>0?(chg/goldData.prevClose*100):0,sign=chg>=0?'+':'',col=chg>=0?'var(--green)':'var(--red)';document.getElementById('gold-price').textContent='$'+fmt(v);var el=document.getElementById('gold-chg');el.textContent=sign+'$'+fmt(Math.abs(chg))+' ('+sign+pchg.toFixed(2)+'%) TODAY';el.style.color=col;}
+function dayChange(d){var chg=d.current-d.prevClose,p=d.prevClose>0?chg/d.prevClose*100:0;return{chg:chg,pct:p,sign:chg>=0?'+':'−',col:chg>=0?'var(--green)':'var(--red)'};}
+
+function renderGold(){var d=state.gold,c=dayChange(d);$('gold-price').textContent='$'+fmt(d.current);var el=$('gold-chg');el.textContent=c.sign+'$'+fmt(Math.abs(c.chg))+' ('+c.sign+Math.abs(c.pct).toFixed(2)+'%) 1D';el.style.color=c.col;}
 
 function renderDxy(){
-  var cur=dxyData.current,pc=dxyData.prevClose,pts=dxyData.points,chg=cur-pc,pchg=pc>0?(chg/pc*100):0,sign=chg>=0?'+':'',lc=chg>=0?'var(--green)':'var(--red)';
-  document.getElementById('dxy-price').textContent=cur.toFixed(2);var ce=document.getElementById('dxy-chg');ce.textContent=sign+Math.abs(chg).toFixed(2)+' ('+sign+pchg.toFixed(2)+'%) TODAY';ce.style.color=lc;
-  document.getElementById('card-dxy').style.setProperty('--card-accent',lc);
-  if(!pts||pts.length<2)return;
+  var d=state.dxy,c=dayChange(d);
+  $('dxy-price').textContent=d.current.toFixed(2);var ce=$('dxy-chg');ce.textContent=c.sign+Math.abs(c.chg).toFixed(2)+' ('+c.sign+Math.abs(c.pct).toFixed(2)+'%) 1D';ce.style.color=c.col;
+  $('card-dxy').style.setProperty('--card-accent',c.col);
+  var all=d.points||[],cut=Date.now()/1000-183*86400,pts=all.filter(function(p){return p.t>=cut;});
+  if(pts.length<2)pts=all;
+  if(pts.length<2)return;
   var closes=pts.map(function(p){return p.c;}),lo=Math.min.apply(null,closes),hi=Math.max.apply(null,closes),n=closes.length,W=200,H=70,pad=2;
-  document.getElementById('dxy-lo').textContent=lo.toFixed(2);document.getElementById('dxy-hi').textContent=hi.toFixed(2);document.getElementById('dxy-range').textContent=lo.toFixed(1)+' – '+hi.toFixed(1);
+  $('dxy-lo').textContent=lo.toFixed(2);$('dxy-hi').textContent=hi.toFixed(2);$('dxy-range').textContent=lo.toFixed(1)+' – '+hi.toFixed(1);
   var fd=function(ts){return new Date(ts*1000).toLocaleDateString('en-US',{month:'short',day:'numeric'});};
-  document.getElementById('dxy-d1').textContent=fd(pts[0].t);document.getElementById('dxy-d2').textContent=fd(pts[n-1].t);
+  $('dxy-d1').textContent=fd(pts[0].t);$('dxy-d2').textContent=fd(pts[n-1].t);
   var xs=[],ys=[];for(var i=0;i<n;i++){xs.push(pad+(i/(n-1))*(W-pad*2));ys.push(pad+(1-(closes[i]-lo)/(hi-lo||1))*(H-pad*2));}
-  var ld='',ad='';for(var j=0;j<n;j++){ld+=(j===0?'M':'L')+xs[j].toFixed(1)+','+ys[j].toFixed(1)+' ';}
-  ad=ld+'L'+xs[n-1].toFixed(1)+','+H+' L'+xs[0].toFixed(1)+','+H+' Z';
-  document.getElementById('dxy-line').setAttribute('d',ld);document.getElementById('dxy-line').setAttribute('stroke',lc);
-  document.getElementById('dxy-area').setAttribute('d',ad);document.getElementById('dxy-grad-stop').setAttribute('stop-color',lc);
-  var dot=document.getElementById('dxy-dot');dot.setAttribute('cx',xs[n-1].toFixed(1));dot.setAttribute('cy',ys[n-1].toFixed(1));dot.setAttribute('fill',lc);
+  var ld='';for(var j=0;j<n;j++){ld+=(j===0?'M':'L')+xs[j].toFixed(1)+','+ys[j].toFixed(1)+' ';}
+  var ad=ld+'L'+xs[n-1].toFixed(1)+','+H+' L'+xs[0].toFixed(1)+','+H+' Z';
+  $('dxy-line').setAttribute('d',ld);$('dxy-line').setAttribute('stroke',c.col);
+  $('dxy-area').setAttribute('d',ad);$('dxy-grad-stop').setAttribute('stop-color',c.col);
+  var dot=$('dxy-dot');dot.setAttribute('cx',xs[n-1].toFixed(1));dot.setAttribute('cy',ys[n-1].toFixed(1));dot.setAttribute('fill',c.col);
 }
 
-function renderDji(){var d=drawdown(djiData.current,djiData.peak),color=ddColor(d);document.getElementById('dji-pct').textContent=(d>0?'−':'')+d.toFixed(2)+'%';document.getElementById('dji-pct').style.color=color;document.getElementById('card-dji').style.setProperty('--card-accent',color);document.getElementById('dji-peak').textContent=fmt(djiData.peak);document.getElementById('dji-cur').textContent=fmt(djiData.current);document.getElementById('dji-loss').textContent='−'+fmt(Math.max(0,djiData.peak-djiData.current));var bar=document.getElementById('dji-bar');bar.style.width=Math.min(100,d/30*100)+'%';bar.style.background=ddBarGrad(d);}
+function renderDji(){var dj=state.dji,d=drawdown(dj.current,dj.peak),color=ddColor(d);$('dji-pct').textContent=(d>0?'−':'')+d.toFixed(2)+'%';$('dji-pct').style.color=color;$('card-dji').style.setProperty('--card-accent',color);$('dji-peak').textContent=fmt(dj.peak);$('dji-cur').textContent=fmt(dj.current);$('dji-loss').textContent='−'+fmt(Math.max(0,dj.peak-dj.current));var bar=$('dji-bar');bar.style.width=Math.min(100,d/30*100)+'%';bar.style.background=ddBarGrad(d);}
 
 function renderVix(){
-  var v=vixData.current,color=vixColor(v);
-  document.getElementById('vix-val').textContent=fmt1(v);document.getElementById('vix-val').style.color=color;document.getElementById('vix-lbl').textContent=vixLabel(v);document.getElementById('vix-lbl').style.color=color;document.getElementById('card-vix').style.setProperty('--card-accent',color);
-  document.getElementById('vix-lo').textContent=fmt1(vixData.low52);document.getElementById('vix-hi').textContent=fmt1(vixData.peak);
-  var bar=document.getElementById('vix-bar');bar.style.width=Math.min(100,v/60*100)+'%';
+  var vd=state.vix,v=vd.current,color=vixColor(v);
+  $('vix-val').textContent=fmt1(v);$('vix-val').style.color=color;$('vix-lbl').textContent=vixLabel(v);$('vix-lbl').style.color=color;$('card-vix').style.setProperty('--card-accent',color);
+  $('vix-lo').textContent=fmt1(vd.low52);$('vix-hi').textContent=fmt1(vd.peak);
+  var bar=$('vix-bar');bar.style.width=Math.min(100,v/60*100)+'%';
   if(v<20)bar.style.background='var(--vix-calm)';else if(v<30)bar.style.background='linear-gradient(90deg,var(--vix-calm),var(--vix-elev))';else if(v<40)bar.style.background='linear-gradient(90deg,var(--vix-elev),var(--vix-fear))';else bar.style.background='linear-gradient(90deg,var(--vix-fear),var(--vix-panic))';
   var zones=[{id:'vz-calm',min:0,max:20},{id:'vz-elev',min:20,max:30},{id:'vz-fear',min:30,max:40},{id:'vz-panic',min:40,max:9999}];
-  for(var z=0;z<zones.length;z++){var el=document.getElementById(zones[z].id);el.classList.remove('lit','zone-active');if(v>=zones[z].min){el.classList.add('lit');if(v<zones[z].max)el.classList.add('zone-active');}}
+  for(var z=0;z<zones.length;z++){var el=$(zones[z].id);el.classList.remove('lit','zone-active');if(v>=zones[z].min){el.classList.add('lit');if(v<zones[z].max)el.classList.add('zone-active');}}
 }
 
-function renderWti(){var v=wtiData.current,lo=wtiData.low52,hi=wtiData.peak,chg=v-wtiData.prevClose,pchg=wtiData.prevClose>0?(chg/wtiData.prevClose*100):0,sign=chg>=0?'+':'',col=chg>=0?'var(--green)':'var(--red)';document.getElementById('wti-val').textContent='$'+fmt(v);var el=document.getElementById('wti-chg');el.textContent=sign+'$'+fmt(Math.abs(chg))+' ('+sign+pchg.toFixed(2)+'%) TODAY';el.style.color=col;document.getElementById('wti-lo').textContent='$'+fmt(lo);document.getElementById('wti-cur').textContent='$'+fmt(v);document.getElementById('wti-hi').textContent='$'+fmt(hi);var bar=document.getElementById('wti-bar');bar.style.width=rangePct(v,lo,hi)+'%';bar.style.background='linear-gradient(90deg,var(--green),var(--cyan))';}
+function renderWti(){var d=state.wti,c=dayChange(d);$('wti-val').textContent='$'+fmt(d.current);var el=$('wti-chg');el.textContent=c.sign+'$'+fmt(Math.abs(c.chg))+' ('+c.sign+Math.abs(c.pct).toFixed(2)+'%) 1D';el.style.color=c.col;$('wti-lo').textContent='$'+fmt(d.low52);$('wti-cur').textContent='$'+fmt(d.current);$('wti-hi').textContent='$'+fmt(d.peak);var bar=$('wti-bar');bar.style.width=rangePct(d.current,d.low52,d.peak)+'%';bar.style.background='linear-gradient(90deg,var(--green),var(--cyan))';}
 
 function renderAlerts(){
-  var sd=drawdown(spData.current,spData.peak),nd=drawdown(ndxData.current,ndxData.peak),vv=vixData.current;
-  var grid=document.getElementById('alert-rows');grid.innerHTML='';
+  var sd=state.sp?drawdown(state.sp.current,state.sp.peak):null,nd=state.ndx?drawdown(state.ndx.current,state.ndx.peak):null,vv=state.vix?state.vix.current:null;
+  var grid=$('alert-rows');grid.innerHTML='';
   for(var t=0;t<THRESHOLDS.length;t++){
-    var th=THRESHOLDS[t],sh=sd>=th.pct,nh=nd>=th.pct,any=sh||nh,color=TC[th.pct];
+    var th=THRESHOLDS[t],sh=sd!=null&&sd>=th.pct,nh=nd!=null&&nd>=th.pct,any=sh||nh,color=TC[th.pct];
     var row=document.createElement('div');row.className='arow'+(any?' triggered':'');row.style.borderLeftColor=any?color:'';
-    row.innerHTML='<span class="aicon">'+th.icon+'</span><span class="athr" style="color:'+color+'">−'+th.pct+'%</span><span class="adesc">'+th.desc+'</span><div class="bwrap">'+mkB('SPX',sh,color)+mkB('NDX',nh,color)+'</div>';
+    row.innerHTML='<span class="aicon">'+th.icon+'</span><span class="athr" style="color:'+color+'">−'+th.pct+'%</span><span class="adesc">'+th.desc+'</span><div class="bwrap">'+mkB('SPX',sh,color,sd==null)+mkB('NDX',nh,color,nd==null)+'</div>';
     grid.appendChild(row);
   }
-  var vixHit=vv>=20,vc=vixColor(vv);
+  var vixHit=vv!=null&&vv>=20,vc=vv!=null?vixColor(vv):'var(--text-dim)';
   var vRow=document.createElement('div');vRow.className='arow'+(vixHit?' triggered':'');vRow.style.borderLeftColor=vixHit?vc:'';
-  vRow.innerHTML='<span class="aicon">😰</span><span class="athr" style="color:'+(vixHit?vc:'var(--text-dim)')+'">VIX&gt;20</span><span class="adesc">Elevated market volatility / fear</span><div class="bwrap">'+mkB('VIX '+fmt1(vv),vixHit,vc)+'</div>';
+  vRow.innerHTML='<span class="aicon">😰</span><span class="athr" style="color:'+(vixHit?vc:'var(--text-dim)')+'">VIX&gt;20</span><span class="adesc">Elevated market volatility / fear</span><div class="bwrap">'+mkB(vv!=null?'VIX '+fmt1(vv):'VIX',vixHit,vc,vv==null)+'</div>';
   grid.appendChild(vRow);
 }
-function mkB(lbl,hit,color){if(hit)return'<span class="badge hit" style="color:'+color+';border-color:'+color+'">'+lbl+' ✓</span>';return'<span class="badge ok">'+lbl+' —</span>';}
+function mkB(lbl,hit,color,noData){if(noData)return'<span class="badge ok">'+lbl+' ?</span>';if(hit)return'<span class="badge hit" style="color:'+color+';border-color:'+color+'">'+lbl+' ✓</span>';return'<span class="badge ok">'+lbl+' —</span>';}
 
 // ═══════════════════════════════════════════════════
 // BOOT
 // ═══════════════════════════════════════════════════
 window.addEventListener('load',function(){
-  document.getElementById('alerts-body').style.maxHeight='none';
-  fetchMA();      // TwelveData: 200MA, once, silent fail if unavailable
-  fetchAll(true); // Yahoo Finance: all market data
+  $('alerts-body').style.maxHeight='none';
+  goodProxy=store.get('mm_proxy',0);
+  if(loadCache()){renderAll();if(lastOkAt)$('ts').textContent='Cached '+fmtTime(lastOkAt);}
+  else renderAlerts();
+  fetchAll(true);
+});
+// Refresh right away when you come back to the tab after it's been idle
+document.addEventListener('visibilitychange',function(){
+  if(document.visibilityState==='visible'&&!paused&&lastOkAt&&Date.now()-lastOkAt>REFRESH_OPEN*1000)fetchAll(false);
 });
 </script>
 </body>
