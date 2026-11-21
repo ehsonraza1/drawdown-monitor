@@ -1,0 +1,132 @@
+name: Update market data
+
+on:
+  schedule:
+    - cron: '*/5 13-21 * * 1-5'   # every 5 min, Mon-Fri, covers US market hours (UTC)
+    - cron: '23 */2 * * *'        # every 2 h otherwise (futures, DXY move overnight)
+  workflow_dispatch:               # "Run workflow" button in the Actions tab
+
+permissions:
+  contents: write
+
+concurrency:
+  group: market-data
+  cancel-in-progress: true
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Fetch from Yahoo Finance
+        run: |
+          mkdir -p out
+          cat > fetch.mjs <<'SCRIPT_EOF'
+          // Fetches Yahoo Finance daily charts server-side (no CORS problem here) and writes data.json
+          // for the Market Monitor page. Run by .github/workflows/market-data.yml.
+          // Usage: node scripts/fetch-market-data.mjs out/data.json
+          import { writeFile, mkdir } from 'node:fs/promises';
+          import { dirname } from 'node:path';
+
+          const OUT = process.argv[2] || 'out/data.json';
+          const SYMBOLS = { sp: '^GSPC', ndx: '^IXIC', gold: 'GC=F', dxy: 'DX-Y.NYB', dji: '^DJI', vix: '^VIX', wti: 'CL=F' };
+          const HOSTS = ['query1.finance.yahoo.com', 'query2.finance.yahoo.com'];
+          const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36';
+          const isNum = (x) => typeof x === 'number' && Number.isFinite(x);
+
+          function parseChart(j) {
+            const res = j?.chart?.result?.[0];
+            if (!res) throw new Error(j?.chart?.error?.description || 'No chart data');
+            const meta = res.meta || {}, ts = res.timestamp || [], q = res.indicators?.quote?.[0] || {};
+            const pts = [];
+            for (let i = 0; i < ts.length; i++) {
+              const c = q.close?.[i];
+              if (!isNum(c)) continue;
+              pts.push({ t: ts[i], c, h: isNum(q.high?.[i]) ? q.high[i] : c, l: isNum(q.low?.[i]) ? q.low[i] : c });
+            }
+            if (pts.length < 2) throw new Error('Too few data points');
+            const n = pts.length;
+            const current = isNum(meta.regularMarketPrice) ? meta.regularMarketPrice : pts[n - 1].c;
+            let peak = isNum(meta.fiftyTwoWeekHigh) ? meta.fiftyTwoWeekHigh : Math.max(...pts.map((p) => p.h));
+            let low52 = isNum(meta.fiftyTwoWeekLow) ? meta.fiftyTwoWeekLow : Math.min(...pts.map((p) => p.l));
+            peak = Math.max(peak, current);
+            low52 = Math.min(low52, current);
+            const ma200 = n >= 200 ? pts.slice(-200).reduce((s, p) => s + p.c, 0) / 200 : null;
+            return { current, peak, low52, prevClose: pts[n - 2].c, ma200, pts };
+          }
+
+          async function getChart(sym) {
+            let lastErr;
+            for (const host of HOSTS) {
+              try {
+                const url = `https://${host}/v8/finance/chart/${encodeURIComponent(sym)}?interval=1d&range=1y&includePrePost=false`;
+                const r = await fetch(url, { headers: { 'User-Agent': UA, Accept: 'application/json' }, signal: AbortSignal.timeout(15000) });
+                if (!r.ok) throw new Error(`HTTP ${r.status}`);
+                return parseChart(await r.json());
+              } catch (e) {
+                lastErr = e;
+              }
+            }
+            throw lastErr;
+          }
+
+          // Previous snapshot, so a symbol that fails this run keeps its last good value.
+          async function loadPrevious() {
+            const repo = process.env.GITHUB_REPOSITORY;
+            if (!repo) return null;
+            try {
+              const r = await fetch(`https://raw.githubusercontent.com/${repo}/market-data/data.json?t=${Date.now()}`, { signal: AbortSignal.timeout(10000) });
+              return r.ok ? await r.json() : null;
+            } catch {
+              return null;
+            }
+          }
+
+          const prev = await loadPrevious();
+          const now = Date.now();
+          const symbols = {};
+          let ok = 0;
+
+          for (const [key, sym] of Object.entries(SYMBOLS)) {
+            try {
+              const d = await getChart(sym);
+              const out = { current: d.current, peak: d.peak, low52: d.low52, prevClose: d.prevClose, ma200: d.ma200, asOf: now };
+              if (key === 'dxy') {
+                const cut = now / 1000 - 183 * 86400;
+                out.points = d.pts.filter((p) => p.t >= cut).map((p) => ({ t: p.t, c: +p.c.toFixed(3) }));
+              }
+              symbols[key] = out;
+              ok++;
+              console.log(`✓ ${sym} ${d.current}`);
+            } catch (e) {
+              console.warn(`✗ ${sym}: ${e.message}`);
+              if (prev?.symbols?.[key]) symbols[key] = prev.symbols[key];
+            }
+          }
+
+          if (ok === 0) {
+            console.error('All symbols failed — not publishing.');
+            process.exit(1);
+          }
+
+          await mkdir(dirname(OUT), { recursive: true });
+          await writeFile(OUT, JSON.stringify({ updatedAt: now, symbols }));
+          console.log(`Wrote ${OUT} (${ok}/${Object.keys(SYMBOLS).length} fresh)`);
+          SCRIPT_EOF
+          node fetch.mjs out/data.json
+
+      - name: Publish to market-data branch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          cd out
+          git init -q -b market-data
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data.json
+          git commit -qm "market data $(date -u +%Y-%m-%dT%H:%MZ)"
+          git push -qf "https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" market-data
